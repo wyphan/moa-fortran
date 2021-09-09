@@ -1,0 +1,32 @@
+root = true
+
+# All files
+[*]
+# UTF-8 encoding
+charset = utf-8
+# Unix-style newlines with a newline ending every file
+end_of_line = lf
+insert_final_newline = true
+# Always remove trailing whitespace
+trim_trailing_whitespace = true
+# Always use 2 spaces
+indent_style = space
+indent_size = 2
+
+# Fixed-form Fortran
+[.F,.f]
+# ASCII encoding
+charset = latin1
+# Mark important columns
+rulers = 6, 72, 80
+
+# Free-form Fortran
+[.F90,.f90]
+# ASCII encoding
+charset = latin1
+# Mark important columns
+rulers = 80, 132
+
+# Makefiles
+[{Makefile,GNUmakefile}]
+indent_style = tab
