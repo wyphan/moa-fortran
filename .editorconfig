@@ -14,14 +14,14 @@ indent_style = space
 indent_size = 2
 
 # Fixed-form Fortran
-[.F,.f]
+[*.{F,f}]
 # ASCII encoding
 charset = latin1
 # Mark important columns
 rulers = 6, 72, 80
 
 # Free-form Fortran
-[.F90,.f90]
+[*.{F90,f90}]
 # ASCII encoding
 charset = latin1
 # Mark important columns
