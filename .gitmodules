@@ -1,3 +1,4 @@
 [submodule "deps/fypp"]
 	path = deps/fypp
 	url = git@github.com:aradi/fypp.git
+	branch = release
