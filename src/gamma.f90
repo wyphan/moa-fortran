@@ -58,6 +58,8 @@ CONTAINS
 ! On out-of-bounds error, returns the negative of the failing 1-based dimension.
 !===============================================================================
   INTEGER FUNCTION gamma_vv_i( avec, bvec ) RESULT( val )
+
+    USE ISO_FORTRAN_ENV, ONLY: u => error_unit
     IMPLICIT NONE
 
     ! Input arguments
@@ -139,10 +141,12 @@ CONTAINS
 ! On out-of-bounds error, returns the negative of the failing 1-based dimension.
 !===============================================================================
   INTEGER(KIND=dl) FUNCTION gamma_vv_dl( avec, bvec ) RESULT( val )
+
+    USE ISO_FORTRAN_ENV, ONLY: u => error_unit
     IMPLICIT NONE
 
     ! Input arguments
-    INTEGER, INTENT(IN) :: avec(:), bvec(:)
+    INTEGER(KIND=dl), INTENT(IN) :: avec(:), bvec(:)
 
     ! Internal variables
     INTEGER :: na, nb, ia, ib, tau
