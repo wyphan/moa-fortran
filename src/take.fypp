@@ -1,10 +1,13 @@
+#:include "common.fypp"
+#:set IR_KINDS_TYPES = INT_KINDS_TYPES + REAL_KINDS_TYPES
 !===============================================================================
 ! The "take" operation
 ! Last edited: Sep 9, 2021 (WYP)
 !===============================================================================
 MODULE mod_moa_take
-
   USE mod_prec
+  USE ISO_FORTRAN_ENV, ONLY: u => error_unit
+
   IMPLICIT NONE
 
   PRIVATE
@@ -13,7 +16,7 @@ MODULE mod_moa_take
   INTERFACE moa_take
 
     ! scalar take vector
-    MODULE PROCEDURE take_sv_i_i,
+    MODULE PROCEDURE take_sv_i_i, &
                      take_sv_dl_dl, &
                      take_sv_i_f,  take_sv_dl_f, &
                      take_sv_i_dd, take_sv_dl_dd
@@ -21,6 +24,30 @@ MODULE mod_moa_take
   END INTERFACE moa_take
 
 CONTAINS
+
+  #:for k1, t1 in IR_KINDS_TYPES
+  LOGICAL FUNCTION check_overtake_${k1}$( sigma, n )
+    ! Input arguments
+    ${t1}$, INTENT(IN) :: sigma, n
+
+    ! Internal variables
+    LOGICAL :: lvalid
+
+    ! Initialize
+    lvalid = .FALSE.
+
+    IF( ABS(sigma) <= n ) THEN
+      lvalid = .TRUE.
+    ELSE
+      lvalid = .FALSE.
+      WRITE(u,'(A,g0,A,g0)') , 'Error[moa_take]: Overtake not allowed ', &
+                               sigma, ' out of ', n
+    END IF
+
+    check_overtake_${k1}$ = lvalid
+  END FUNCTION check_overtake_${k1}$
+  #:endfor
+
 
 !===============================================================================
 ! Helper function to print error message on overtake (for default integer type)
