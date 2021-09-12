@@ -1,0 +1,8 @@
+# Preprocessed Fortran files
+*.pp.f90
+
+# Fortran module files
+*.mod
+
+# Object files
+*.o
