@@ -1,0 +1,50 @@
+# -*- mode: makefile-gmake; -*-
+###############################################################################
+# make.inc file for GCC on 64-bit x86 Linux
+# Last edited: Sep 12, 2021 (WYP)
+###############################################################################
+
+# Name of the compiler suite (used for library name)
+COMPILER = gcc
+
+# System (Linux, Windows, or Mac)
+SYS = linux
+
+# Code for the native build architecture
+# Note that we're following Debian's nomenclature:
+# https://wiki.debian.org/SupportedArchitectures
+ARCH = amd64
+
+###############################################################################
+# Fortran options
+###############################################################################
+
+# Path/name of the Fortran compiler
+FC = gfortran
+
+# General options for the Fortran compiler
+FCOPTS = -g -O2 -fPIC -march=native -fopt-info
+
+###############################################################################
+# Python options
+###############################################################################
+
+# Path/name of the Python compiler (for fypp)
+# Note: please specify explicitly python2 or python3, following PEP-394:
+# https://www.python.org/dev/peps/pep-0394/
+PY = python3
+
+# Options for the fypp preprocessor
+FYPPOPTS =
+
+# Set to 1 to keep preprocessed Fortran files (e.g. for debugging)
+KEEPF90PP = 0
+
+###############################################################################
+# Utilities
+###############################################################################
+
+# Path/name of the archiver (for creating static library)
+AR = ar
+
+###############################################################################

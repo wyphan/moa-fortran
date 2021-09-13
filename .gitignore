@@ -1,3 +1,6 @@
+# Main make.inc file
+make.inc
+
 # Preprocessed Fortran files
 *.pp.f90
 
@@ -6,3 +9,12 @@
 
 # Object files
 *.o
+
+# Built static library
+*.a
+
+# Built shared library
+*.so
+
+# Built testing routines
+tests/test_*.x
