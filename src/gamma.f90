@@ -20,9 +20,9 @@ MODULE mod_moa_gamma
 CONTAINS
 
 !===============================================================================
-! Helper function to check out of bounds access
+! Helper function to check out of bounds access (default integer)
 !===============================================================================
-  LOGICAL FUNCTION check_bounds( avec, bvec, tau )
+  LOGICAL FUNCTION check_bounds_i( avec, bvec, tau )
 
     USE ISO_FORTRAN_ENV, ONLY: u => error_unit
     IMPLICIT NONE
@@ -32,26 +32,60 @@ CONTAINS
 
     ! Internal variables
     INTEGER :: ia, ib
-    LOGICAL :: lbound
+    LOGICAL :: lbnd
 
     ! Initialize
-    lbound = .FALSE.
+    lbnd = .FALSE.
 
     ! Move index to correct dimension
     ia = LBOUND(avec,1) + tau
     ib = LBOUND(bvec,1) + tau
 
     IF( avec(ia) < bvec(ib) ) THEN
-      lbound = .TRUE.
+      lbnd = .TRUE.
     ELSE
-      lbound = .FALSE.
+      lbnd = .FALSE.
       WRITE(u,'(A,I0,A,I0)') "Error[moa_gamma]: Out-of-bounds access ", &
                               avec(ia), " out of ", bvec(ib)
     END IF
 
-    check_bounds = lbound
+    check_bounds_i = lbnd
     RETURN
-  END FUNCTION check_bounds
+  END FUNCTION check_bounds_i
+
+!===============================================================================
+! Helper function to check out of bounds access (64-bit integer)
+!===============================================================================
+  LOGICAL FUNCTION check_bounds_dl( avec, bvec, tau )
+
+    USE ISO_FORTRAN_ENV, ONLY: u => error_unit
+    IMPLICIT NONE
+
+    ! Input arguments
+    INTEGER(KIND=dl), INTENT(IN) :: avec(:), bvec(:), tau
+
+    ! Internal variables
+    INTEGER(KIND=dl) :: ia, ib
+    LOGICAL :: lbnd
+
+    ! Initialize
+    lbnd = .FALSE.
+
+    ! Move index to correct dimension
+    ia = LBOUND(avec,1) + tau
+    ib = LBOUND(bvec,1) + tau
+
+    IF( avec(ia) < bvec(ib) ) THEN
+      lbnd = .TRUE.
+    ELSE
+      lbnd = .FALSE.
+      WRITE(u,'(A,I0,A,I0)') "Error[moa_gamma]: Out-of-bounds access ", &
+                              avec(ia), " out of ", bvec(ib)
+    END IF
+
+    check_bounds_dl = lbnd
+    RETURN
+  END FUNCTION check_bounds_dl
 
 !===============================================================================
 ! Implementation of gamma ( vector, vector ) that returns the default integer.
@@ -67,7 +101,7 @@ CONTAINS
 
     ! Internal variables
     INTEGER :: na, nb, ia, ib, tau
-    LOGICAL :: lbound
+    LOGICAL :: lbnd
 
     ! Check shapes
     na = SIZE(avec,1)
@@ -89,8 +123,8 @@ CONTAINS
       ! One-element vector
 
       ! Check bounds
-      lbound = check_bounds( avec, bvec, 0 )
-      IF( lbound ) THEN
+      lbnd = check_bounds_i( avec, bvec, 0 )
+      IF( lbnd ) THEN
 
         ! Use identity (3.30) in MoA dissertation
         val = avec(LBOUND(avec,1))
@@ -111,8 +145,8 @@ CONTAINS
       DO tau = 1, na-1
 
         ! Check bounds
-        lbound = check_bounds( avec, bvec, tau )
-        IF( lbound ) THEN
+        lbnd = check_bounds_i( avec, bvec, tau )
+        IF( lbnd ) THEN
 
           ! Move index to correct dimension
           ia = LBOUND(avec,1) + tau
@@ -149,8 +183,8 @@ CONTAINS
     INTEGER(KIND=dl), INTENT(IN) :: avec(:), bvec(:)
 
     ! Internal variables
-    INTEGER :: na, nb, ia, ib, tau
-    LOGICAL :: lbound
+    INTEGER(KIND=dl) :: na, nb, ia, ib, tau
+    LOGICAL :: lbnd
 
     ! Check shapes
     na = SIZE(avec,1)
@@ -172,8 +206,8 @@ CONTAINS
       ! One-element vector
 
       ! Check bounds
-      lbound = check_bounds( avec, bvec, 0 )
-      IF( lbound ) THEN
+      lbnd = check_bounds_dl( avec, bvec, 0_dl )
+      IF( lbnd ) THEN
 
         ! Use identity (3.30) in MoA dissertation
         val = avec(LBOUND(avec,1))
@@ -194,8 +228,8 @@ CONTAINS
       DO tau = 1, na-1
 
         ! Check bounds
-        lbound = check_bounds( avec, bvec, tau )
-        IF( lbound ) THEN
+        lbnd = check_bounds_dl( avec, bvec, tau )
+        IF( lbnd ) THEN
 
           ! Move index to correct dimension
           ia = LBOUND(avec,1) + tau
