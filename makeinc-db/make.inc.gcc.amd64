@@ -25,6 +25,9 @@ FC = gfortran
 # General options for the Fortran compiler
 FCOPTS = -g -O2 -fPIC -march=native -fopt-info
 
+# Preprocessor options
+CPPOPTS = -cpp -E
+
 ###############################################################################
 # Python options
 ###############################################################################

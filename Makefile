@@ -19,11 +19,14 @@ include make.inc
 %.pp.f90: %.fypp
 	$(PY) deps/fypp/bin/fypp $< $@
 
+%.pp.f90: %.F90
+	$(FC) $(FCOPTS) $(CPPOPTS) $< -o $@
+
 %.f90.o: %.pp.f90
-	$(FC) $(FCOPTS) -c $< -o $*.o
+	$(FC) $(FCOPTS) -J$(*D) -Isrc/common -c $< -o $(@:.f90.o=.o)
 
 %.f90.o: %.f90
-	$(FC) $(FCOPTS) -c $< -o $*.o
+	$(FC) $(FCOPTS) -J$(*D) -Isrc/common -c $< -o $(@:.f90.o=.o)
 
 ###############################################################################
 # Phony targets
@@ -37,22 +40,29 @@ all: static shared
 # List sources and targets
 ###############################################################################
 
+MODF90SRC = $(shell find src/common -name \*.f90)
+MODFPPSRC = $(shell find src/common -name \*.F90)
 MODFYPPSRC = $(shell find src/common -name \*.fypp)
-MODF90SRC = $(shell find src/common -name \*.[fF]90)
 
+F90SRC = $(shell find src -name \*.f90 | grep -v common)
+FPPSRC = $(shell find src -name \*.F90 | grep -v common)
 FYPPSRC = $(shell find src -name \*.fypp | grep -v common)
-F90SRC = $(shell find src -name \*.[fF]90 | grep -v common)
 
-DEPTGT = $(MODF90SRC:.f90=.f90.o) $(MODFYPPSRC:.fypp=.f90.o)
+PPSRC = $(MODFPPSRC:.F90=.pp.f90) $(MODFYPPSRC:.fypp=.pp.f90)
 
-TGT = $(F90SRC:.f90=.f90.o) $(FYPPSRC:.fypp=.f90.o)
+DEPTGT = $(MODF90SRC:.f90=.f90.o) \
+           $(MODFPPSRC:.F90=.f90.o) $(MODFYPPSRC:.fypp=.f90.o)
+
+TGT = $(F90SRC:.f90=.f90.o) $(FPPSRC:.F90=.f90.o) $(FYPPSRC:.fypp=.f90.o)
 
 OBJ = mod_moa.o \
-      $(MODF90SRC:.f90=.o) $(MODFYPPSRC:.fypp=.o) \
-      $(F90SRC:.f90=.o) $(FYPPSRC:.fypp=.o)
-MOD = mod_moa.mod \
-      $(MODF90SRC:.F90=.mod) $(MODFYPPSRC:.fypp=.mod) \
-      $(F90SRC:.f90=.mod) $(FYPPSRC:.fypp=.mod)
+        $(MODF90SRC:.f90=.o) $(MODFPPSRC:.F90=.o) $(MODFYPPSRC:.fypp=.o) \
+        $(F90SRC:.f90=.o) $(FPPSRC:.F90=.o) $(FYPPSRC:.fypp=.o)
+F90MOD = moa.mod \
+           $(MODF90SRC:%.f90=mod_%.mod) \
+           $(MODFPPSRC:%.F90=mod_%.mod) $(MODFYPPSRC:%.fypp=mod_%.mod) \
+           $(F90SRC:%.f90=mod_%.mod) \
+           $(FPPSRC:%.F90=mod_%.mod) $(FYPPSRC:%.fypp=mod_%.mod)
 
 ###############################################################################
 # Preprocess with fypp
@@ -61,6 +71,14 @@ MOD = mod_moa.mod \
 $(foreach f90file,$(MODFYPPSRC:.fypp=.pp.f90),$(f90file)):
 
 $(foreach f90file,$(FYPPSRC:.fypp=.pp.f90),$(f90file)):
+
+###############################################################################
+# Preprocess with cpp
+###############################################################################
+
+$(foreach f90file,$(MODFPPSRC:.F90=.pp.f90),$(f90file)):
+
+$(foreach f90file,$(FPPSRC:.F90=.pp.f90),$(f90file)):
 
 ###############################################################################
 # Build static library
@@ -72,9 +90,8 @@ $(foreach objfile,$(TGT),$(objfile)): $(DEPTGT)
 
 STATICLIB = libmoa.$(SYS)-$(ARCH)-$(COMPILER).a
 
-mod_moa.f90.o: $(TGT)
-
-mod_moa: mod_moa.f90.o
+mod_moa: $(TGT)
+	$(FC) $(FCOPTS) -Isrc/common -Isrc -c mod_moa.f90 -o mod_moa.o
 
 static: mod_moa
 	$(AR) r $(STATICLIB) $(OBJ)
@@ -106,5 +123,9 @@ install:
 ###############################################################################
 
 clean:
-	-rm -f $(shell find . -name \*.o)
-	-rm -f $(shell find . -name \*.mod)
+	-rm -f $(STATICLIB)
+	-rm -f $(OBJ)
+	-rm -f `find . -name \*.mod`
+ifneq ($(KEEPF90PP), 1)
+	-rm -f $(PPSRC)
+endif
