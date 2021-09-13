@@ -13,7 +13,7 @@ MODULE mod_moa_take
   INTERFACE moa_take
 
     ! scalar take vector
-    MODULE PROCEDURE take_sv_i_i,
+    MODULE PROCEDURE take_sv_i_i, &
                      take_sv_dl_dl, &
                      take_sv_i_f,  take_sv_dl_f, &
                      take_sv_i_dd, take_sv_dl_dd
@@ -43,7 +43,7 @@ CONTAINS
       lvalid = .TRUE.
     ELSE
       lvalid = .FALSE.
-      WRITE(u,'(A,I0,A,I0)') , 'Error[moa_take]: Overtake not allowed ', &
+      WRITE(u,'(A,I0,A,I0)') 'Error[moa_take]: Overtake not allowed ', &
                                sigma, ' out of ', n
     END IF
 
@@ -73,7 +73,7 @@ CONTAINS
       lvalid = .TRUE.
     ELSE
       lvalid = .FALSE.
-      WRITE(u,'(A,I0,A,I0)') , 'Error[moa_take]: Overtake not allowed ', &
+      WRITE(u,'(A,I0,A,I0)') 'Error[moa_take]: Overtake not allowed ', &
                                sigma, ' out of ', n
     END IF
 
@@ -84,7 +84,7 @@ CONTAINS
 !===============================================================================
 ! Implementation of scalar take vector for default integer type
 !===============================================================================
-  FUNCTION take_sv_i_i( sigma, n ) RESULT( take )
+  FUNCTION take_sv_i_i( sigma, vec ) RESULT( take )
 
     IMPLICIT NONE
 
@@ -121,12 +121,12 @@ CONTAINS
 
     END IF
 
-  END FUNCTION take_sv_i
+  END FUNCTION take_sv_i_i
 
 !===============================================================================
 ! Implementation of scalar take vector for 64-bit integer type
 !===============================================================================
-  FUNCTION take_sv_dl_dl( sigma, n ) RESULT( take )
+  FUNCTION take_sv_dl_dl( sigma, vec ) RESULT( take )
 
     IMPLICIT NONE
 
@@ -168,7 +168,7 @@ CONTAINS
 !===============================================================================
 ! Implementation of scalar take vector for default integer and real types
 !===============================================================================
-  FUNCTION take_sv_i_f( sigma, vec )
+  FUNCTION take_sv_i_f( sigma, vec ) RESULT( take )
 
     IMPLICIT NONE
 
@@ -211,7 +211,7 @@ CONTAINS
 !===============================================================================
 ! Implementation of scalar take vector for 64-bit integer and default real type
 !===============================================================================
-  FUNCTION take_sv_dl_f( sigma, vec )
+  FUNCTION take_sv_dl_f( sigma, vec ) RESULT( take )
 
     IMPLICIT NONE
 
@@ -254,7 +254,7 @@ CONTAINS
 !===============================================================================
 ! Implementation of scalar take vector for default integer type and 64-bit real
 !===============================================================================
-  FUNCTION take_sv_i_dd( sigma, vec )
+  FUNCTION take_sv_i_dd( sigma, vec ) RESULT( take )
 
     IMPLICIT NONE
 
@@ -297,7 +297,7 @@ CONTAINS
 !===============================================================================
 ! Implementation of scalar take vector for 64-bit integer and default real type
 !===============================================================================
-  FUNCTION take_sv_dl_dd( sigma, vec )
+  FUNCTION take_sv_dl_dd( sigma, vec ) RESULT( take )
 
     IMPLICIT NONE
 
