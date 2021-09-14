@@ -2,7 +2,7 @@
 #:set IR_KINDS_TYPES = INT_KINDS_TYPES + REAL_KINDS_TYPES
 !===============================================================================
 ! The family of "Gamma" offset functions
-! Last edited: Sep 9, 2021 (WYP)
+! Last edited: Sep 14, 2021 (JVDP)
 !===============================================================================
 MODULE mod_moa_gamma
 
