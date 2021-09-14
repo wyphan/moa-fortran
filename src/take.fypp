@@ -16,27 +16,29 @@ MODULE mod_moa_take
   INTERFACE moa_take
 
     ! scalar take vector
-    MODULE PROCEDURE take_sv_i_i, &
-                     take_sv_dl_dl, &
-                     take_sv_i_f,  take_sv_dl_f, &
-                     take_sv_i_dd, take_sv_dl_dd
+#:for k1, t1 in INT_KINDS_TYPES
+  #:for k2, t2 in IR_KINDS_TYPES
+    MODULE PROCEDURE take_sv_${k1}$_${k2}$
+  #:endfor
+#:endfor
 
   END INTERFACE moa_take
 
-
   interface check_overtake
-      #:for k1, t1 in INT_KINDS_TYPES
-      module procedure check_overtake_${k1}$
-      #:endfor
-  end interface
+
+#:for k1, t1 in INT_KINDS_TYPES
+    module procedure check_overtake_${k1}$
+#:endfor
+
+end interface
 
 CONTAINS
 
 !===================================================
 ! Helper function to print error message on overtake
 !===================================================
-  #:for k1, t1 in INT_KINDS_TYPES
-  LOGICAL FUNCTION check_overtake_${k1}$( sigma, n )
+#:for k1, t1 in INT_KINDS_TYPES
+  LOGICAL FUNCTION check_overtake_${k1}$ ( sigma, n )
     ! Input arguments
     ${t1}$, INTENT(IN) :: sigma, n
 
@@ -56,264 +58,53 @@ CONTAINS
 
     check_overtake_${k1}$ = lvalid
   END FUNCTION check_overtake_${k1}$
+#:endfor
+
+!===============================================================================
+! Implementation of scalar take vector for ${k1} scalar and ${k2} vector
+!===============================================================================
+#:for k1, t1 in INT_KINDS_TYPES
+  #:for k2, t2 in IR_KINDS_TYPES
+  FUNCTION take_sv_${k1}$_${k2}$ ( sigma, vec ) RESULT( take )
+
+    IMPLICIT NONE
+
+    ! Arguments
+    ${t1}$, INTENT(IN) :: sigma
+    ${t2}$, INTENT(IN), TARGET :: vec(:)
+    ${t2}$, POINTER :: take(:)
+
+    ! Internal variables
+    ${t1}$ :: n
+    LOGICAL :: lvalid
+
+    n = SIZE( vec, 1 )
+    lvalid = check_overtake( sigma, n )
+    IF( lvalid ) THEN
+
+      IF( sigma > 0 ) THEN
+
+        ! Positive take
+        take => vec( :sigma )
+
+      ELSE
+
+        ! Negative take
+        ! Note how +1 is needed here to account for 1-based Fortran indexing
+        take => vec( (n+sigma+1): )
+
+      END IF
+
+    ELSE
+
+      ! Overtake
+      NULLIFY(take)
+
+    END IF
+
+  END FUNCTION take_sv_${k1}$_${k2}$
   #:endfor
-
-
-!===============================================================================
-! Implementation of scalar take vector for default integer type
-!===============================================================================
-  FUNCTION take_sv_i_i( sigma, vec ) RESULT( take )
-
-    IMPLICIT NONE
-
-    ! Arguments
-    INTEGER, INTENT(IN) :: sigma
-    INTEGER, INTENT(IN), TARGET :: vec(:)
-    INTEGER, POINTER :: take(:)
-
-    ! Internal variables
-    INTEGER :: n
-    LOGICAL :: lvalid
-
-    n = SIZE( vec, 1 )
-    lvalid = check_overtake( sigma, n )
-    IF( lvalid ) THEN
-
-      IF( sigma > 0 ) THEN
-
-        ! Positive take
-        take => vec( :sigma )
-
-      ELSE
-
-        ! Negative take
-        ! Note how +1 is needed here to account for 1-based Fortran indexing
-        take => vec( (n+sigma+1): )
-
-      END IF
-
-    ELSE
-
-      ! Overtake
-      NULLIFY(take)
-
-    END IF
-
-  END FUNCTION take_sv_i_i
-
-!===============================================================================
-! Implementation of scalar take vector for 64-bit integer type
-!===============================================================================
-  FUNCTION take_sv_dl_dl( sigma, vec ) RESULT( take )
-
-    IMPLICIT NONE
-
-    ! Arguments
-    INTEGER(KIND=dl), INTENT(IN) :: sigma
-    INTEGER(KIND=dl), INTENT(IN), TARGET :: vec(:)
-    INTEGER(KIND=dl), POINTER :: take(:)
-
-    ! Internal variables
-    INTEGER(kind=dl) :: n
-    LOGICAL :: lvalid
-
-    n = SIZE( vec, 1 )
-    lvalid = check_overtake( sigma, n )
-    IF( lvalid ) THEN
-
-      IF( sigma > 0 ) THEN
-
-        ! Positive take
-        take => vec( :sigma )
-
-      ELSE
-
-        ! Negative take
-        ! Note how +1 is needed here to account for 1-based Fortran indexing
-        take => vec( (n+sigma+1): )
-
-      END IF
-
-    ELSE
-
-      ! Overtake
-      NULLIFY(take)
-
-    END IF
-
-  END FUNCTION take_sv_dl_dl
-
-!===============================================================================
-! Implementation of scalar take vector for default integer and real types
-!===============================================================================
-  FUNCTION take_sv_i_f( sigma, vec ) RESULT( take )
-
-    IMPLICIT NONE
-
-    ! Arguments
-    INTEGER, INTENT(IN) :: sigma
-    REAL, INTENT(IN), TARGET :: vec(:)
-    REAL, POINTER :: take(:)
-
-    ! Internal variables
-    INTEGER :: n
-    LOGICAL :: lvalid
-
-    n = SIZE( vec, 1 )
-
-    lvalid = check_overtake( sigma, n )
-    IF( lvalid ) THEN
-
-      IF( sigma > 0 ) THEN
-
-        ! Positive take
-        take => vec( :sigma )
-
-      ELSE
-
-        ! Negative take
-        ! Note how +1 is needed here to account for 1-based Fortran indexing
-        take => vec( (n+sigma+1): )
-
-      END IF
-
-    ELSE
-
-      ! Overtake
-      NULLIFY(take)
-
-    END IF
-
-  END FUNCTION take_sv_i_f
-
-!===============================================================================
-! Implementation of scalar take vector for 64-bit integer and default real type
-!===============================================================================
-  FUNCTION take_sv_dl_f( sigma, vec ) RESULT( take )
-
-    IMPLICIT NONE
-
-    ! Arguments
-    INTEGER(KIND=dl), INTENT(IN) :: sigma
-    REAL, INTENT(IN), TARGET :: vec(:)
-    REAL, POINTER :: take(:)
-
-    ! Internal variables
-    INTEGER(kind=dl) :: n
-    LOGICAL :: lvalid
-
-    n = SIZE( vec, 1 )
-
-    lvalid = check_overtake( sigma, n )
-    IF( lvalid ) THEN
-
-      IF( sigma > 0 ) THEN
-
-        ! Positive take
-        take => vec( :sigma )
-
-      ELSE
-
-        ! Negative take
-        ! Note how +1 is needed here to account for 1-based Fortran indexing
-        take => vec( (n+sigma+1): )
-
-      END IF
-
-    ELSE
-
-      ! Overtake
-      NULLIFY(take)
-
-    END IF
-
-  END FUNCTION take_sv_dl_f
-
-!===============================================================================
-! Implementation of scalar take vector for default integer type and 64-bit real
-!===============================================================================
-  FUNCTION take_sv_i_dd( sigma, vec ) RESULT( take )
-
-    IMPLICIT NONE
-
-    ! Arguments
-    INTEGER, INTENT(IN) :: sigma
-    REAL(KIND=dd), INTENT(IN), TARGET :: vec(:)
-    REAL(KIND=dd), POINTER :: take(:)
-
-    ! Internal variables
-    INTEGER :: n
-    LOGICAL :: lvalid
-
-    n = SIZE( vec, 1 )
-
-    lvalid = check_overtake( sigma, n )
-    IF( lvalid ) THEN
-
-      IF( sigma > 0 ) THEN
-
-        ! Positive take
-        take => vec( :sigma )
-
-      ELSE
-
-        ! Negative take
-        ! Note how +1 is needed here to account for 1-based Fortran indexing
-        take => vec( (n+sigma+1): )
-
-      END IF
-
-    ELSE
-
-      ! Overtake
-      NULLIFY(take)
-
-    END IF
-
-  END FUNCTION take_sv_i_dd
-
-!===============================================================================
-! Implementation of scalar take vector for 64-bit integer and default real type
-!===============================================================================
-  FUNCTION take_sv_dl_dd( sigma, vec ) RESULT( take )
-
-    IMPLICIT NONE
-
-    ! Arguments
-    INTEGER(KIND=dl), INTENT(IN) :: sigma
-    REAL(KIND=dd), INTENT(IN), TARGET :: vec(:)
-    REAL(KIND=dd), POINTER :: take(:)
-
-    ! Internal variables
-    INTEGER(kind=dl) :: n
-    LOGICAL :: lvalid
-
-    n = SIZE( vec, 1 )
-
-    lvalid = check_overtake( sigma, n )
-    IF( lvalid ) THEN
-
-      IF( sigma > 0 ) THEN
-
-        ! Positive take
-        take => vec( :sigma )
-
-      ELSE
-
-        ! Negative take
-        ! Note how +1 is needed here to account for 1-based Fortran indexing
-        take => vec( (n+sigma+1): )
-
-      END IF
-
-    ELSE
-
-      ! Overtake
-      NULLIFY(take)
-
-    END IF
-
-  END FUNCTION take_sv_dl_dd
+#:endfor
 
 !===============================================================================
 
