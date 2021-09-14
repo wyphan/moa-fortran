@@ -1,17 +1,18 @@
 MODULE mod_prec
 
   ! Note: This intrinsic module is provided starting in Fortran 2003
-  USE ISO_FORTRAN_ENV, ONLY: CHARACTER_STORAGE_SIZE
+  USE ISO_FORTRAN_ENV, ONLY: CHARACTER_STORAGE_SIZE, int32
 
   IMPLICIT NONE
 
   PRIVATE
   PUBLIC :: dl, dd, dc, dz, sz_l, sz_d, sz_c, sz_z
+  public :: int32
 
   INTRINSIC :: STORAGE_SIZE
 
   ! Precision constants
-  INTEGER, PARAMETER :: dl = SELECTED_INT_KIND(18)      ! 64-bit (long)
+  INTEGER, PARAMETER :: dl = SELECTED_INT_KIND(18)      ! 64-bit (long)    !this ensures by int64 provided by iso_fortran_env
   INTEGER, PARAMETER :: dd = SELECTED_REAL_KIND(14,100) ! 64-bit (double)
   INTEGER, PARAMETER :: dc = KIND( (0.0, 1.0) )
   INTEGER, PARAMETER :: dz = KIND( (0.0_dd, 1.0_dd) )

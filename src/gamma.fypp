@@ -1,0 +1,149 @@
+#:include "common.fypp"
+#:set IR_KINDS_TYPES = INT_KINDS_TYPES + REAL_KINDS_TYPES
+!===============================================================================
+! The family of "Gamma" offset functions
+! Last edited: Sep 9, 2021 (WYP)
+!===============================================================================
+MODULE mod_moa_gamma
+
+  USE ISO_FORTRAN_ENV, ONLY: u => error_unit
+
+  USE mod_prec
+  IMPLICIT NONE
+
+  PRIVATE
+  PUBLIC :: moa_gamma
+
+  INTERFACE moa_gamma
+
+    ! gamma ( vector, vector )
+    #:for k1, t1 in INT_KINDS_TYPES
+    MODULE PROCEDURE gamma_vv_${k1}$
+    #:endfor
+
+  END INTERFACE moa_gamma
+
+  interface check_bounds
+    #:for k1, t1 in INT_KINDS_TYPES
+    module procedure check_bounds_${k1}$
+    #:endfor
+  end interface
+
+CONTAINS
+
+#:for k1, t1 in INT_KINDS_TYPES
+!===============================================================================
+! Helper function to check out of bounds access (${t1}$)
+!===============================================================================
+  LOGICAL FUNCTION check_bounds_${k1}$( avec, bvec, tau )
+
+    ! Input arguments
+    ${t1}$, INTENT(IN) :: avec(:), bvec(:), tau
+
+    ! Internal variables
+    ${t1}$ :: ia, ib
+    LOGICAL :: lbnd
+
+    ! Initialize
+    lbnd = .FALSE.
+
+    ! Move index to correct dimension
+    ia = LBOUND(avec,1) + tau
+    ib = LBOUND(bvec,1) + tau
+
+    IF( avec(ia) < bvec(ib) ) THEN
+      lbnd = .TRUE.
+    ELSE
+      lbnd = .FALSE.
+      WRITE(u,'(A,I0,A,I0)') "Error[moa_gamma]: Out-of-bounds access ", &
+                              avec(ia), " out of ", bvec(ib)
+    END IF
+
+    check_bounds_${k1}$ = lbnd
+    RETURN
+  END FUNCTION check_bounds_${k1}$
+#:endfor
+
+#:for k1, t1 in INT_KINDS_TYPES
+!===============================================================================
+! Implementation of gamma ( vector, vector ) that returns ${t1}$.
+! On out-of-bounds error, returns the negative of the failing 1-based dimension.
+!===============================================================================
+  ${t1}$ FUNCTION gamma_vv_${k1}$( avec, bvec ) RESULT( val )
+
+    ! Input arguments
+    ${t1}$, INTENT(IN) :: avec(:), bvec(:)
+
+    ! Internal variables
+    ${t1}$ :: na, nb, ia, ib, tau
+    LOGICAL :: lbnd
+
+    ! Check shapes
+    na = SIZE(avec,1)
+    nb = SIZE(bvec,1)
+
+    IF( na == 0 .AND. nb == 0 ) THEN
+
+      ! Quick exit for empty vectors
+      val = 0
+
+    ELSE IF( na /= nb ) THEN
+
+      ! Non conformable shapes
+      val = -1
+      WRITE(u,'(A)') "Error[moa_gamma]: Non-conformable shapes"
+
+    ELSE IF( na == 1 ) THEN
+
+      ! One-element vector
+
+      ! Check bounds
+      lbnd = check_bounds( avec, bvec, 0_${k1}$ )
+      IF( lbnd ) THEN
+
+        ! Use identity (3.30) in MoA dissertation
+        val = avec(LBOUND(avec,1))
+
+      ELSE
+
+        ! Out of bounds
+        val = -1
+
+      END IF ! lbound
+
+    ELSE
+
+      ! Initialize result
+      val = avec(ia)
+
+      ! Main logic construct
+      DO tau = 1, na-1
+
+        ! Check bounds
+        lbnd = check_bounds( avec, bvec, tau )
+        IF( lbnd ) THEN
+
+          ! Move index to correct dimension
+          ia = LBOUND(avec,1) + tau
+          ib = LBOUND(bvec,1) + tau
+
+          ! Multiply and accumulate
+          val = val*INT(bvec(ib),KIND=${k1}$) + INT(avec(ia),KIND=${k1}$)
+
+        ELSE
+
+          ! Out of bounds
+          val = -(tau+1)
+          EXIT
+
+        END IF ! lbound
+
+      END DO ! tau
+
+    END IF ! na >= 1
+
+    RETURN
+  END FUNCTION gamma_vv_${k1}$
+#:endfor
+
+END MODULE
