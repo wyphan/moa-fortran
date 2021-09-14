@@ -1,3 +1,4 @@
+#! -*- mode: f90; -*-
 #:mute
 
 #! Real kinds to be considered during templating
