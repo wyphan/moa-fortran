@@ -1,10 +1,13 @@
+#:include "common.fypp"
+#:set IR_KINDS_TYPES = INT_KINDS_TYPES + REAL_KINDS_TYPES
 !===============================================================================
 ! The "take" operation
-! Last edited: Sep 9, 2021 (WYP)
+! Last edited: Sep 14, 2021 (JVDP)
 !===============================================================================
 MODULE mod_moa_take
-
   USE mod_prec
+  USE ISO_FORTRAN_ENV, ONLY: u => error_unit
+
   IMPLICIT NONE
 
   PRIVATE
@@ -20,18 +23,22 @@ MODULE mod_moa_take
 
   END INTERFACE moa_take
 
+
+  interface check_overtake
+      #:for k1, t1 in INT_KINDS_TYPES
+      module procedure check_overtake_${k1}$
+      #:endfor
+  end interface
+
 CONTAINS
 
-!===============================================================================
-! Helper function to print error message on overtake (for default integer type)
-!===============================================================================
-  LOGICAL FUNCTION check_overtake_i( sigma, n )
-
-    USE ISO_FORTRAN_ENV, ONLY: u => error_unit
-    IMPLICIT NONE
-
+!===================================================
+! Helper function to print error message on overtake
+!===================================================
+  #:for k1, t1 in INT_KINDS_TYPES
+  LOGICAL FUNCTION check_overtake_${k1}$( sigma, n )
     ! Input arguments
-    INTEGER, INTENT(IN) :: sigma, n
+    ${t1}$, INTENT(IN) :: sigma, n
 
     ! Internal variables
     LOGICAL :: lvalid
@@ -43,43 +50,14 @@ CONTAINS
       lvalid = .TRUE.
     ELSE
       lvalid = .FALSE.
-      WRITE(u,'(A,I0,A,I0)') 'Error[moa_take]: Overtake not allowed ', &
+      WRITE(u,'(A,g0,A,g0)') 'Error[moa_take]: Overtake not allowed ', &
                                sigma, ' out of ', n
     END IF
 
-    check_overtake_i = lvalid
-    RETURN
-  END FUNCTION check_overtake_i
+    check_overtake_${k1}$ = lvalid
+  END FUNCTION check_overtake_${k1}$
+  #:endfor
 
-!===============================================================================
-! Helper function to print error message on overtake (for 64-bit integer)
-!===============================================================================
-  LOGICAL FUNCTION check_overtake_dl( sigma, n )
-
-    USE ISO_FORTRAN_ENV, ONLY: u => error_unit
-    IMPLICIT NONE
-
-    ! Input arguments
-    INTEGER(KIND=dl), INTENT(IN) :: sigma
-    INTEGER, INTENT(IN) :: n
-
-    ! Internal variables
-    LOGICAL :: lvalid
-
-    ! Initialize
-    lvalid = .FALSE.
-
-    IF( ABS(sigma) <= INT(n,KIND=dl) ) THEN
-      lvalid = .TRUE.
-    ELSE
-      lvalid = .FALSE.
-      WRITE(u,'(A,I0,A,I0)') 'Error[moa_take]: Overtake not allowed ', &
-                               sigma, ' out of ', n
-    END IF
-
-    check_overtake_dl = lvalid
-    RETURN
-  END FUNCTION check_overtake_dl
 
 !===============================================================================
 ! Implementation of scalar take vector for default integer type
@@ -98,7 +76,7 @@ CONTAINS
     LOGICAL :: lvalid
 
     n = SIZE( vec, 1 )
-    lvalid = check_overtake_i( sigma, n )
+    lvalid = check_overtake( sigma, n )
     IF( lvalid ) THEN
 
       IF( sigma > 0 ) THEN
@@ -136,11 +114,11 @@ CONTAINS
     INTEGER(KIND=dl), POINTER :: take(:)
 
     ! Internal variables
-    INTEGER :: n
+    INTEGER(kind=dl) :: n
     LOGICAL :: lvalid
 
     n = SIZE( vec, 1 )
-    lvalid = check_overtake_dl( sigma, n )
+    lvalid = check_overtake( sigma, n )
     IF( lvalid ) THEN
 
       IF( sigma > 0 ) THEN
@@ -183,7 +161,7 @@ CONTAINS
 
     n = SIZE( vec, 1 )
 
-    lvalid = check_overtake_i( sigma, n )
+    lvalid = check_overtake( sigma, n )
     IF( lvalid ) THEN
 
       IF( sigma > 0 ) THEN
@@ -221,12 +199,12 @@ CONTAINS
     REAL, POINTER :: take(:)
 
     ! Internal variables
-    INTEGER :: n
+    INTEGER(kind=dl) :: n
     LOGICAL :: lvalid
 
     n = SIZE( vec, 1 )
 
-    lvalid = check_overtake_dl( sigma, n )
+    lvalid = check_overtake( sigma, n )
     IF( lvalid ) THEN
 
       IF( sigma > 0 ) THEN
@@ -269,7 +247,7 @@ CONTAINS
 
     n = SIZE( vec, 1 )
 
-    lvalid = check_overtake_i( sigma, n )
+    lvalid = check_overtake( sigma, n )
     IF( lvalid ) THEN
 
       IF( sigma > 0 ) THEN
@@ -307,12 +285,12 @@ CONTAINS
     REAL(KIND=dd), POINTER :: take(:)
 
     ! Internal variables
-    INTEGER :: n
+    INTEGER(kind=dl) :: n
     LOGICAL :: lvalid
 
     n = SIZE( vec, 1 )
 
-    lvalid = check_overtake_dl( sigma, n )
+    lvalid = check_overtake( sigma, n )
     IF( lvalid ) THEN
 
       IF( sigma > 0 ) THEN
