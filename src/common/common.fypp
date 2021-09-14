@@ -1,7 +1,7 @@
 #:mute
 
 #! Real kinds to be considered during templating
-#:set REAL_KINDS = ["sp", "dp", "qp"]
+#:set REAL_KINDS = ["ds", "dd", "dq"]
 
 #! Real types to be considered during templating
 #:set REAL_TYPES = ["real({})".format(k) for k in REAL_KINDS]
@@ -10,7 +10,7 @@
 #:set REAL_KINDS_TYPES = list(zip(REAL_KINDS, REAL_TYPES))
 
 #! Integer kinds to be considered during templating
-#:set INT_KINDS = ["int32", "dl"]
+#:set INT_KINDS = ["di", "dl"]
 
 #! Integer types to be considered during templating
 #:set INT_TYPES = ["integer({})".format(k) for k in INT_KINDS]
