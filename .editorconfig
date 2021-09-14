@@ -1,8 +1,8 @@
 root = true
 
-# All files
+# All files (unless specified otherwise below)
 [*]
-# UTF-8 encoding
+# UTF-8 encoding by default
 charset = utf-8
 # Unix-style newlines with a newline ending every file
 end_of_line = lf
@@ -17,6 +17,8 @@ indent_size = 2
 [*.{F,f}]
 # ASCII encoding
 charset = latin1
+# Enforce 80 column limit (old-school FORTRAN)
+max_line_length = 80
 # Mark important columns
 rulers = 6, 72, 80
 
@@ -24,9 +26,33 @@ rulers = 6, 72, 80
 [*.{F90,f90}]
 # ASCII encoding
 charset = latin1
+# Enforce 132 column limit (Fortran 90)
+max_line_length = 132
+# Mark important columns
+rulers = 80, 132
+
+# Templated free-form Fortran
+[*.fypp]
+# ASCII encoding
+charset = latin1
+# Enforce 132 column limit (Fortran 90)
+max_line_length = 132
 # Mark important columns
 rulers = 80, 132
 
 # Makefiles
 [{Makefile,GNUmakefile}]
+# Tabs are part of the syntax
 indent_style = tab
+indent_size = 4
+
+# Python scripts
+[*.py]
+# Conform to PEP-8
+indent_size = 4
+max_line_length = 79
+
+# Shell scripts
+[*.sh]
+# Use 80 column limit
+max_line_length = 80
