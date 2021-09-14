@@ -1,3 +1,7 @@
+!===============================================================================
+! Module for portable precision constants
+! Last edited: Sep 14, 2021 (JVDP)
+!===============================================================================
 MODULE mod_prec
 
   ! Note: This intrinsic module is provided starting in Fortran 2003
