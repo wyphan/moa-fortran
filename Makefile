@@ -48,7 +48,8 @@ F90SRC  := $(shell find src -name \*.f90 | grep -v common)
 FPPSRC  := $(shell find src -name \*.F90 | grep -v common)
 FYPPSRC := $(shell find src -name \*.fypp | grep -v common)
 
-PPSRC = $(MODFPPSRC:.F90=.pp.f90) $(MODFYPPSRC:.fypp=.pp.f90)
+PPSRC = $(MODFPPSRC:.F90=.pp.f90) $(MODFYPPSRC:.fypp=.pp.f90) \
+          $(FPPSRC:.F90=.pp.f90) $(FYPPSRC:.fypp=.pp.f90)
 
 DEPTGT = $(MODF90SRC:.f90=.f90.o) \
            $(MODFPPSRC:.F90=.f90.o) $(MODFYPPSRC:.fypp=.f90.o)
