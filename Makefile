@@ -1,6 +1,6 @@
 ###############################################################################
 # Main Makefile for moa-fortran
-# Last edited: Sep 12, 2021 (WYP)
+# Last edited: Sep 14, 2021 (WYP)
 ###############################################################################
 
 # Please provide a make.inc file.
@@ -40,13 +40,13 @@ all: static shared
 # List sources and targets
 ###############################################################################
 
-MODF90SRC = $(shell find src/common -name \*.f90)
-MODFPPSRC = $(shell find src/common -name \*.F90)
-MODFYPPSRC = $(shell find src/common -name \*.fypp)
+MODF90SRC  := $(shell find src/common -name \*.f90)
+MODFPPSRC  := $(shell find src/common -name \*.F90)
+MODFYPPSRC := $(shell find src/common -name \*.fypp)
 
-F90SRC = $(shell find src -name \*.f90 | grep -v common)
-FPPSRC = $(shell find src -name \*.F90 | grep -v common)
-FYPPSRC = $(shell find src -name \*.fypp | grep -v common)
+F90SRC  := $(shell find src -name \*.f90 | grep -v common)
+FPPSRC  := $(shell find src -name \*.F90 | grep -v common)
+FYPPSRC := $(shell find src -name \*.fypp | grep -v common)
 
 PPSRC = $(MODFPPSRC:.F90=.pp.f90) $(MODFYPPSRC:.fypp=.pp.f90)
 
