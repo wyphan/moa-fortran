@@ -21,7 +21,7 @@ PROGRAM testtake
   PRINT *
 
   PRINT *, 'Test error message for negative overtake'
-  ptr_r => moa_take( 12, v )
+  ptr_r => moa_take( -12, v )
   PRINT *, ptr_r
   PRINT *
 
@@ -41,4 +41,4 @@ PROGRAM testtake
   NULLIFY(ptr_r)
 
   STOP
-END PROGRAM testgamma
+END PROGRAM testtake
