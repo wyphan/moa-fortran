@@ -1,0 +1,113 @@
+#! -*- mode: f90; -*-
+#:include "common/common.fypp"
+#:set IR_KINDS_TYPES = INT_KINDS_TYPES + REAL_KINDS_TYPES
+!===============================================================================
+! The "drop" operation
+! Last edited: Sep 17, 2021 (JVDP)
+!===============================================================================
+MODULE mod_moa_drop
+  USE mod_prec
+  USE ISO_FORTRAN_ENV, ONLY: u => error_unit
+
+  IMPLICIT NONE
+
+  PRIVATE
+  PUBLIC :: moa_drop
+
+  INTERFACE moa_drop
+
+    ! scalar take vector
+#:for k1, t1 in INT_KINDS_TYPES
+  #:for k2, t2 in IR_KINDS_TYPES
+    MODULE PROCEDURE drop_sv_${k1}$_${k2}$
+  #:endfor
+#:endfor
+
+  END INTERFACE moa_drop
+
+  interface check_overdrop
+
+#:for k1, t1 in INT_KINDS_TYPES
+    module procedure check_overdrop_${k1}$
+#:endfor
+
+end interface
+
+CONTAINS
+
+!===================================================
+! Helper function to print error message on overtake
+!===================================================
+#:for k1, t1 in INT_KINDS_TYPES
+  LOGICAL FUNCTION check_overdrop_${k1}$ ( sigma, n )
+    ! Input arguments
+    ${t1}$, INTENT(IN) :: sigma, n
+
+    ! Internal variables
+    LOGICAL :: lvalid
+
+    ! Initialize
+    lvalid = .FALSE.
+
+    IF( ABS(sigma) <= n ) THEN
+      lvalid = .TRUE.
+    ELSE
+      lvalid = .FALSE.
+      WRITE(u,'(A,g0,A,g0)') 'Error[moa_drop]: Overdrop not allowed ', &
+                               sigma, ' out of ', n
+    END IF
+
+    check_overdrop_${k1}$ = lvalid
+  END FUNCTION check_overdrop_${k1}$
+#:endfor
+
+!===============================================================================
+! Implementation of scalar take vector for ${k1} scalar and ${k2} vector
+!===============================================================================
+#:for k1, t1 in INT_KINDS_TYPES
+  #:for k2, t2 in IR_KINDS_TYPES
+  FUNCTION drop_sv_${k1}$_${k2}$ ( sigma, vec ) RESULT( drop )
+
+    IMPLICIT NONE
+
+    ! Arguments
+    ${t1}$, INTENT(IN) :: sigma
+    ${t2}$, INTENT(IN), TARGET :: vec(:)
+    ${t2}$, POINTER :: drop(:)
+
+    ! Internal variables
+    ${t1}$ :: n
+    LOGICAL :: lvalid
+
+    n = SIZE( vec, 1 )
+    lvalid = check_overdrop( sigma, n )
+    IF( lvalid ) THEN
+
+      IF( sigma > 0 ) THEN
+
+        ! Positive drop
+        ! Note how +1 is needed here to account for 1-based Fortran indexing
+        drop => vec( (sigma+1): )
+
+      ELSE
+
+        ! Negative drop
+        ! Note how -1 is needed here to account for 1-based Fortran indexing
+        drop => vec( :(n+sigma-1) )
+
+      END IF
+
+    ELSE
+
+      ! Overdrop
+      NULLIFY(drop)
+
+    END IF
+
+  END FUNCTION drop_sv_${k1}$_${k2}$
+  #:endfor
+#:endfor
+
+!===============================================================================
+
+END MODULE mod_moa_drop

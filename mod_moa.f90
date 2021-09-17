@@ -4,6 +4,7 @@ MODULE moa
 
   ! Operations
   USE mod_moa_take  ! "Take" operator
+  USE mod_moa_drop  ! "Drop" operator
 
   ! Functions
   USE mod_moa_gamma ! "Gamma" function family
