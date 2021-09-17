@@ -17,12 +17,10 @@ PROGRAM testtake
   ! Test error messages
   PRINT *, 'Test error message for positive overtake'
   ptr_r => moa_take( 12, v )
-  PRINT *, ptr_r
   PRINT *
 
   PRINT *, 'Test error message for negative overtake'
   ptr_r => moa_take( -12, v )
-  PRINT *, ptr_r
   PRINT *
 
   ! Test positive take
