@@ -2,6 +2,7 @@
 
 The following operations have been implemented:
 - [x] scalar take vector
+- [x] scalar drop vector
 
 The following functions have been implemented:
 - [x] gamma ( vector, vector )
