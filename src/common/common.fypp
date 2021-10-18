@@ -19,4 +19,37 @@
 #! Collected (kind, type) tuples for integer types
 #:set INT_KINDS_TYPES = list(zip(INT_KINDS, INT_TYPES))
 
+
+#! Code for mining /proc/id_proc/status under Linux
+
+#:def mem_linux(*args)
+ #:if len(args) > 0
+  write(*,'(a)')${args[0]}$
+ #:endif
+ block
+  integer(kind=4)::getpid
+  character(25)::pid,a
+
+  write(*,'(/a,i0,a)')'Memory statistics for process ',getpid(),': '
+  write(pid,*)getpid()
+  pid=trim(adjustl(pid))
+
+  a='grep VmPeak /proc/'//pid(:len_trim(pid))//'/status'
+  call system(a)
+  a='grep VmSize /proc/'//pid(:len_trim(pid))//'/status'
+  call system(a)
+  a='grep VmHWM /proc/'//pid(:len_trim(pid))//'/status'
+  call system(a)
+  a='grep VmRSS /proc/'//pid(:len_trim(pid))//'/status'
+  call system(a)
+  a='grep VmData /proc/'//pid(:len_trim(pid))//'/status'
+  call system(a)
+  a='grep VmStk /proc/'//pid(:len_trim(pid))//'/status'
+  call system(a)
+  a='grep VmSwap /proc/'//pid(:len_trim(pid))//'/status'
+  call system(a)
+  
+ end block
+#:enddef
+
 #:endmute
