@@ -45,7 +45,6 @@ PROGRAM testgamma
   PRINT *, '3-element vector (/ 0, 1, 2 /), (/ 2, 3, 4 /)'
   a(0:2) = [ 0, 1, 2 ]
   b(0:2) = [ 2, 3, 4 ]
-  moa_reset = .TRUE.
   r = moa_gamma( a(0:2), b(0:2) )
   PRINT *, r
   PRINT *
@@ -56,7 +55,6 @@ PROGRAM testgamma
      a(i) = i
      b(i) = i + 2
   END DO
-  moa_reset = .TRUE.
   r = moa_gamma( a, b )
   PRINT *, r
   PRINT *
