@@ -35,19 +35,19 @@
   pid=trim(adjustl(pid))
 
   a='grep VmPeak /proc/'//pid(:len_trim(pid))//'/status'
-  call system(a)
+  call execute_command_line(a)
   a='grep VmSize /proc/'//pid(:len_trim(pid))//'/status'
-  call system(a)
+  call execute_command_line(a)
   a='grep VmHWM /proc/'//pid(:len_trim(pid))//'/status'
-  call system(a)
+  call execute_command_line(a)
   a='grep VmRSS /proc/'//pid(:len_trim(pid))//'/status'
-  call system(a)
+  call execute_command_line(a)
   a='grep VmData /proc/'//pid(:len_trim(pid))//'/status'
-  call system(a)
+  call execute_command_line(a)
   a='grep VmStk /proc/'//pid(:len_trim(pid))//'/status'
-  call system(a)
+  call execute_command_line(a)
   a='grep VmSwap /proc/'//pid(:len_trim(pid))//'/status'
-  call system(a)
+  call execute_command_line(a)
   
  end block
 #:enddef
