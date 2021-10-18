@@ -19,4 +19,53 @@
 #! Collected (kind, type) tuples for integer types
 #:set INT_KINDS_TYPES = list(zip(INT_KINDS, INT_TYPES))
 
+
+#! Generates a loop around the procedure for which the time should be
+#! measured
+#
+#! Example
+#! ```fortran
+#! ...
+#! @:TIC(5)
+#! call procedure_to_be_measured()
+#! @:TOC()
+#! ...
+#! ```
+
+
+#:def TIC(n=10)
+  #:global BENCHMARK_NREPS
+  #:set BENCHMARK_NREPS = n
+  block
+    use, intrinsic :: iso_fortran_env, only: int64, real64
+    integer(int64) :: benchmark_i
+
+    integer(int64) :: nb_periodes_initial, nb_periodes_final&
+                      , nb_periodes_sed, nb_periodes_max,nb_periodes
+
+
+    real(real64) :: tps_elapsed
+    call system_clock(COUNT_RATE=nb_periodes_sed,COUNT_MAX=nb_periodes_max)
+    call system_clock(COUNT=nb_periodes_initial)
+    do benchmark_i = 1, ${BENCHMARK_NREPS}$
+#:enddef
+
+#:def TOC(*args)
+    #:global BENCHMARK_NREPS
+    end do
+
+    call system_clock(COUNT=nb_periodes_final)
+    nb_periodes = nb_periodes_final - nb_periodes_initial
+    if (nb_periodes_final<nb_periodes_initial) nb_periodes=nb_periodes+nb_periodes_max
+    tps_elapsed=real(nb_periodes, real64)/nb_periodes_sed
+    tps_elapsed=tps_elapsed/${BENCHMARK_NREPS}$
+  #:if len(args) > 0
+    ${args[0]}$ = tps_elapsed
+  #:else
+    write(*,*) "Average time is ",tps_elapsed," seconds."
+  #:endif
+  end block
+  #:del BENCHMARK_NREPS
+#:enddef
+
 #:endmute
