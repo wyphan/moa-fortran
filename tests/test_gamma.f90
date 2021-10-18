@@ -2,6 +2,7 @@ PROGRAM testgamma
 
   USE mod_prec
   USE moa, ONLY: moa_gamma
+  use modheader, only: header
   IMPLICIT NONE
 
   INTEGER, PARAMETER :: maxdim = 18
@@ -9,6 +10,8 @@ PROGRAM testgamma
   INTEGER(KIND=dl) :: r
   INTEGER :: i
   INTEGER :: a(0:maxdim-1), b(0:maxdim-1)
+
+  call header()
 
   ! Test error messages
   PRINT *, 'Test error message for non-conformables'
