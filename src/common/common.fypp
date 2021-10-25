@@ -27,28 +27,45 @@
   write(*,'(a)')${args[0]}$
  #:endif
  block
+  integer :: io, un
   integer(kind=4)::getpid
-  character(25)::pid,a
+  character(100)::pid
+  character(1000) :: cdummy
+  character(len=:), allocatable :: namefile
+  character(len=6), parameter :: selection(7) = [&
+                                'VmPeak', &
+                                'VmSize', &
+                                'VmHWM:', &
+                                'VmRSS:', &
+                                'VmData', &
+                                'VmStk:', &
+                                'VmSwap' &
+                                ]
+  logical :: lexist
+  character(len=:), allocatable :: message_
 
-  write(*,'(/a,i0,a)')'Memory statistics for process ',getpid(),': '
   write(pid,*)getpid()
   pid=trim(adjustl(pid))
 
-  a='grep VmPeak /proc/'//pid(:len_trim(pid))//'/status'
-  call execute_command_line(a)
-  a='grep VmSize /proc/'//pid(:len_trim(pid))//'/status'
-  call execute_command_line(a)
-  a='grep VmHWM /proc/'//pid(:len_trim(pid))//'/status'
-  call execute_command_line(a)
-  a='grep VmRSS /proc/'//pid(:len_trim(pid))//'/status'
-  call execute_command_line(a)
-  a='grep VmData /proc/'//pid(:len_trim(pid))//'/status'
-  call execute_command_line(a)
-  a='grep VmStk /proc/'//pid(:len_trim(pid))//'/status'
-  call execute_command_line(a)
-  a='grep VmSwap /proc/'//pid(:len_trim(pid))//'/status'
-  call execute_command_line(a)
-  
+  namefile = '/proc/'//pid(:len_trim(pid))//'/status'
+
+  inquire(file = namefile, exist = lexist)
+  if(.not.lexist)then
+   write(error_unit,'(a)')'The file '//namefile//' does not exist.'
+   error stop
+  endif
+
+  message_ = 'Memory statistics for process '//trim(pid)//': '//new_line('a')
+
+  open(newunit = un, file = namefile, status = 'old', action = 'read')
+  do
+   read(un, '(a)', iostat = io)cdummy
+   if(io.ne.0)exit
+   if(any(selection.eq.cdummy(1:6))) message_ = message_//trim(cdummy)//new_line('a')
+  enddo
+
+  write(output_unit,'(a)')message_
+
  end block
 #:enddef
 
