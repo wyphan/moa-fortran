@@ -19,6 +19,53 @@
 #! Collected (kind, type) tuples for integer types
 #:set INT_KINDS_TYPES = list(zip(INT_KINDS, INT_TYPES))
 
+#! Code for mining /proc/id_proc/status under Linux
+#:def mem_linux(*args)
+ #:if len(args) > 0
+  write(*,'(a)')${args[0]}$
+ #:endif
+ block
+  integer :: io, un
+  integer(kind=4)::getpid
+  character(100)::pid
+  character(1000) :: cdummy
+  character(len=:), allocatable :: namefile
+  character(len=6), parameter :: selection(7) = [&
+                                'VmPeak', &
+                                'VmSize', &
+                                'VmHWM:', &
+                                'VmRSS:', &
+                                'VmData', &
+                                'VmStk:', &
+                                'VmSwap' &
+                                ]
+  logical :: lexist
+  character(len=:), allocatable :: message_
+
+  write(pid,*)getpid()
+  pid=trim(adjustl(pid))
+
+  namefile = '/proc/'//pid(:len_trim(pid))//'/status'
+
+  inquire(file = namefile, exist = lexist)
+  if(.not.lexist)then
+   write(error_unit,'(a)')'The file '//namefile//' does not exist.'
+   error stop
+  endif
+
+  message_ = 'Memory statistics for process '//trim(pid)//': '//new_line('a')
+
+  open(newunit = un, file = namefile, status = 'old', action = 'read')
+  do
+   read(un, '(a)', iostat = io)cdummy
+   if(io.ne.0)exit
+   if(any(selection.eq.cdummy(1:6))) message_ = message_//trim(cdummy)//new_line('a')
+  enddo
+
+  write(output_unit,'(a)')message_
+
+ end block
+ #:enddef
 
 #! Generates a loop around the procedure for which the time should be
 #! measured
