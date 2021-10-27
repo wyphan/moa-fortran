@@ -1,9 +1,8 @@
 #! -*- mode: f90; -*-
 #:include "common/common.fypp"
-#:set IR_KINDS_TYPES = INT_KINDS_TYPES + REAL_KINDS_TYPES
 !===============================================================================
 ! The family of "Gamma" offset functions
-! Last edited: Sep 14, 2021 (JVDP)
+! Last edited: Oct 26, 2021 (WYP)
 !===============================================================================
 MODULE mod_moa_gamma
 
@@ -14,15 +13,39 @@ MODULE mod_moa_gamma
 
   PRIVATE
   PUBLIC :: moa_gamma
+  PUBLIC :: moa_gamma_layout
+  PUBLIC :: moa_gamma_row, moa_gamma_col
+
+  ! Derived type to hold available memory layouts
+  INTEGER, PARAMETER :: moa_gamma_name_maxlen = 12
+  TYPE moa_gamma_layout
+    INTEGER :: enum
+    CHARACTER(LEN=moa_gamma_name_maxlen) :: name
+  END TYPE moa_gamma_layout
+
+  ! Named constants
+  TYPE(moa_gamma_layout), PARAMETER :: moa_gamma_row = moa_gamma_layout( 0, "row-major" )
+  TYPE(moa_gamma_layout), PARAMETER :: moa_gamma_col = moa_gamma_layout( 1, "column-major" )
 
   INTERFACE moa_gamma
+    #:for k1, t1 in INT_KINDS_TYPES
+    MODULE PROCEDURE gamma_${k1}$
+    #:endfor
+  END INTERFACE moa_gamma
 
+  INTERFACE gamma_col
     ! gamma ( vector, vector )
     #:for k1, t1 in INT_KINDS_TYPES
-    MODULE PROCEDURE gamma_vv_${k1}$
+    MODULE PROCEDURE gamma_col_${k1}$
     #:endfor
+  END INTERFACE gamma_col
 
-  END INTERFACE moa_gamma
+  INTERFACE gamma_row
+    ! gamma ( vector, vector )
+    #:for k1, t1 in INT_KINDS_TYPES
+    MODULE PROCEDURE gamma_row_${k1}$
+    #:endfor
+  END INTERFACE gamma_row
 
   interface check_bounds
     #:for k1, t1 in INT_KINDS_TYPES
@@ -34,117 +57,170 @@ CONTAINS
 
 #:for k1, t1 in INT_KINDS_TYPES
 !===============================================================================
-! Helper function to check out of bounds access (${t1}$)
+! Interface to the different gamma functions for each layout and shape
 !===============================================================================
-  LOGICAL FUNCTION check_bounds_${k1}$( avec, bvec, tau )
+  ${t1}$ FUNCTION gamma_${k1}$ ( idx, shp, layout ) RESULT( val )
 
     ! Input arguments
-    ${t1}$, INTENT(IN) :: avec(:), bvec(:), tau
+    ${t1}$, INTENT(IN) :: idx(0:), shp(0:)
+    TYPE(moa_gamma_layout), INTENT(IN), OPTIONAL :: layout
 
     ! Internal variables
-    ${t1}$ :: ia, ib
+    INTEGER :: itype, dimshp, dimidx
     LOGICAL :: lbnd
 
-    ! Initialize
-    lbnd = .FALSE.
+    ! Check shapes
+    dimshp = SIZE( shp, 1 )
+    dimidx = SIZE( idx, 1 )
 
-    ! Move index to correct dimension
-    ia = LBOUND(avec,1) + tau
-    ib = LBOUND(bvec,1) + tau
-
-    IF( avec(ia) < bvec(ib) ) THEN
-      lbnd = .TRUE.
-    ELSE
-      lbnd = .FALSE.
-      WRITE(u,'(A,I0,A,I0)') "Error[moa_gamma]: Out-of-bounds access ", &
-                              avec(ia), " out of ", bvec(ib)
+    ! Check for non-conformable shapes
+    IF( dimshp /= dimidx ) THEN
+      val = -1
+      WRITE(u,'(A)') "Error[moa_gamma]: Non-conformable shapes"
+      RETURN
     END IF
 
-    check_bounds_${k1}$ = lbnd
+    ! Quick exit for empty vectors
+    ! gamma( <>, <> ) = 0
+    IF( dimshp == 0 ) THEN
+      val = 0
+      RETURN
+    END IF
+
+    ! Gamma function for vectors
+    ! gamma( <i>, rho vvec ) = i
+    IF( dimshp == 1 ) THEN
+      lbnd = check_bounds( idx(0), shp(0) )
+      IF( lbnd ) THEN
+        val = idx(0)
+      ELSE
+        val = -1
+      END IF ! lbnd
+      RETURN
+    END IF
+
+    ! Check layout
+    IF( PRESENT(layout) ) THEN
+      SELECT CASE(layout%enum)
+      CASE( moa_gamma_row%enum, moa_gamma_col%enum )
+        itype = layout%enum
+      CASE DEFAULT
+        WRITE(u,'(A)') "Error[moa_gamma]: Unsupported layout"
+        val = -layout%enum
+        RETURN
+      END SELECT ! layout
+    ELSE
+      ! Default layout is row-major
+      itype = moa_gamma_row%enum
+    END IF ! layout
+
+    ! Call the correct version of gamma function
+    SELECT CASE(itype)
+    CASE( moa_gamma_row%enum )
+      val = gamma_row_${k1}$( idx, shp )
+    CASE( moa_gamma_col%enum )
+      val = gamma_col_${k1}$( idx, shp )
+    END SELECT ! itype
+
     RETURN
-  END FUNCTION check_bounds_${k1}$
+  END FUNCTION gamma_${k1}$
 #:endfor
 
 #:for k1, t1 in INT_KINDS_TYPES
 !===============================================================================
-! Implementation of gamma ( vector, vector ) that returns ${t1}$.
+! Implementation of gamma_row ( index_vector, shape_vector ) for ${t1}$ type.
 ! On out-of-bounds error, returns the negative of the failing 1-based dimension.
 !===============================================================================
-  ${t1}$ FUNCTION gamma_vv_${k1}$( avec, bvec ) RESULT( val )
+  ${t1}$ FUNCTION gamma_row_${k1}$ ( idx, shp ) RESULT( val )
 
     ! Input arguments
-    ${t1}$, INTENT(IN) :: avec(:), bvec(:)
+    ${t1}$, INTENT(IN) :: idx(0:), shp(0:)
 
     ! Internal variables
-    ${t1}$ :: na, nb, ia, ib, tau
+    ${t1}$ :: n, tau
     LOGICAL :: lbnd
 
-    ! Check shapes
-    na = SIZE(avec,1)
-    nb = SIZE(bvec,1)
+    ! Get dimensionality
+    n = SIZE(idx,1)
 
-    IF( na == 0 .AND. nb == 0 ) THEN
+    ! Main logic construct
+    val = idx(0)
+    DO tau = 1, n-1
 
-      ! Quick exit for empty vectors
-      val = 0
+      ! Check for out-of-bounds error
+      lbnd = check_bounds( idx(tau), shp(tau) )
+      IF( .NOT. lbnd ) THEN
+        val = -(tau+1)
+        RETURN
+      END IF
 
-    ELSE IF( na /= nb ) THEN
+      ! Multiply and accumulate
+      val = val*INT( shp(tau), KIND=${k1}$ ) + INT( idx(tau), KIND=${k1}$ )
 
-      ! Non conformable shapes
-      val = -1
-      WRITE(u,'(A)') "Error[moa_gamma]: Non-conformable shapes"
-
-    ELSE IF( na == 1 ) THEN
-
-      ! One-element vector
-
-      ! Check bounds
-      lbnd = check_bounds( avec, bvec, 0_${k1}$ )
-      IF( lbnd ) THEN
-
-        ! Use identity (3.30) in MoA dissertation
-        val = avec(LBOUND(avec,1))
-
-      ELSE
-
-        ! Out of bounds
-        val = -1
-
-      END IF ! lbound
-
-    ELSE
-
-      ! Initialize result
-      val = avec(ia)
-
-      ! Main logic construct
-      DO tau = 1, na-1
-
-        ! Check bounds
-        lbnd = check_bounds( avec, bvec, tau )
-        IF( lbnd ) THEN
-
-          ! Move index to correct dimension
-          ia = LBOUND(avec,1) + tau
-          ib = LBOUND(bvec,1) + tau
-
-          ! Multiply and accumulate
-          val = val*INT(bvec(ib),KIND=${k1}$) + INT(avec(ia),KIND=${k1}$)
-
-        ELSE
-
-          ! Out of bounds
-          val = -(tau+1)
-          EXIT
-
-        END IF ! lbound
-
-      END DO ! tau
-
-    END IF ! na >= 1
+    END DO ! tau
 
     RETURN
-  END FUNCTION gamma_vv_${k1}$
+  END FUNCTION gamma_row_${k1}$
 #:endfor
+
+#:for k1, t1 in INT_KINDS_TYPES
+!===============================================================================
+! Implementation of gamma_column( index_vector, shape_vector ) for ${t1}$ type.
+! On out-of-bounds error, returns the negative of the failing 1-based dimension.
+!===============================================================================
+  ${t1}$ FUNCTION gamma_col_${k1}$ ( idx, shp ) RESULT( val )
+
+    ! Input arguments
+    ${t1}$, INTENT(IN) :: idx(0:), shp(0:)
+
+    ! Internal variables
+    ${t1}$ :: n, tau
+    LOGICAL :: lbnd
+
+    ! Get dimensionality
+    n = SIZE(idx,1)
+
+    ! Main logic construct
+    val = idx(n-1)
+    DO tau = n-2, 0, -1
+
+      ! Check for out-of-bounds error
+      lbnd = check_bounds( idx(tau), shp(tau) )
+      IF( .NOT. lbnd ) THEN
+        val = -(tau+1)
+        RETURN
+      END IF
+
+      ! Multiply and accumulate
+      val = val*INT( shp(tau), KIND=${k1}$ ) + INT( idx(tau), KIND=${k1}$ )
+
+    END DO ! tau
+
+    RETURN
+  END FUNCTION gamma_col_${k1}$
+#:endfor
+
+#:for k1, t1 in INT_KINDS_TYPES
+!===============================================================================
+! Helper function to check for out of bounds access (${t1}$ type)
+!===============================================================================
+  LOGICAL FUNCTION check_bounds_${k1}$( idx, dim ) RESULT(lbnd)
+
+    ! Input arguments
+    ${t1}$, INTENT(IN) :: idx, dim
+
+    IF( idx < dim ) THEN
+      lbnd = .TRUE.
+    ELSE
+      lbnd = .FALSE.
+      WRITE(u,'(A,I0,A,I0)') "Error[moa_gamma]: Out-of-bounds access ", &
+                              idx, " out of ", dim
+    END IF
+
+    RETURN
+  END FUNCTION check_bounds_${k1}$
+#:endfor
+
+!===============================================================================
 
 END MODULE
