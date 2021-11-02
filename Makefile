@@ -23,10 +23,10 @@ include make.inc
 	$(FC) $(FCOPTS) $(CPPOPTS) $< -o $@
 
 %.f90.o: %.pp.f90
-	$(FC) $(FCOPTS) $(MODFLAG)$(*D) -Isrc/common -c $< -o $(@:.f90.o=.o)
+	$(FC) $(FCOPTS) $(MODFLAG) $(*D) -Isrc/common -c $< -o $(@:.f90.o=.o)
 
 %.f90.o: %.f90
-	$(FC) $(FCOPTS) $(MODFLAG)$(*D) -Isrc/common -c $< -o $(@:.f90.o=.o)
+	$(FC) $(FCOPTS) $(MODFLAG) $(*D) -Isrc/common -c $< -o $(@:.f90.o=.o)
 
 ###############################################################################
 # Phony targets

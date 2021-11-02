@@ -23,13 +23,13 @@ ARCH = amd64
 FC = ifort
 
 # General options for the Fortran compiler
-FCOPTS = -g -O2 -fPIC -march=native -fopt-info
+FCOPTS = -g -debug -O2 -fPIC -xHost -qopt-report
 
 # Preprocessor options
 CPPOPTS = -fpp -E
 
 # Module path flag
-MODFLAG = "-module "
+MODFLAG = -module
 
 ###############################################################################
 # Python options
