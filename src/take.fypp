@@ -20,6 +20,7 @@ MODULE mod_moa_take
 #:for k1, t1 in INT_KINDS_TYPES
   #:for k2, t2 in IR_KINDS_TYPES
     MODULE PROCEDURE take_sv_${k1}$_${k2}$
+    MODULE PROCEDURE take_sr_${k1}$_${k2}$
   #:endfor
 #:endfor
 
@@ -31,15 +32,16 @@ MODULE mod_moa_take
     module procedure check_overtake_${k1}$
 #:endfor
 
-end interface
+  end interface check_overtake
 
 CONTAINS
 
-!===================================================
+!===============================================================================
 ! Helper function to print error message on overtake
-!===================================================
+!===============================================================================
 #:for k1, t1 in INT_KINDS_TYPES
   LOGICAL FUNCTION check_overtake_${k1}$ ( sigma, n )
+
     ! Input arguments
     ${t1}$, INTENT(IN) :: sigma, n
 
@@ -60,6 +62,14 @@ CONTAINS
     check_overtake_${k1}$ = lvalid
   END FUNCTION check_overtake_${k1}$
 #:endfor
+
+!===============================================================================
+! Helper function to print error message on scalar take scalar
+!===============================================================================
+  SUBROUTINE error_scalar
+    IMPLICIT NONE
+    WRITE(u,'(A)') 'Error[moa_take]: Cannot perform scalar take scalar'
+  END SUBROUTINE error_scalar
 
 !===============================================================================
 ! Implementation of scalar take vector for ${k1} scalar and ${k2} vector
@@ -108,5 +118,73 @@ CONTAINS
 #:endfor
 
 !===============================================================================
+! Implementation of scalar take vector for ${k1} scalar and ${k2} assumed-rank
+!===============================================================================
+#:for k1, t1 in INT_KINDS_TYPES
+  #:for k2, t2 in IR_KINDS_TYPES
+  FUNCTION take_sr_${k1}$_${k2}$ ( sigma, arr ) RESULT( take )
 
+    IMPLICIT NONE
+
+    ! Arguments
+    ${t1}$, INTENT(IN) :: sigma
+    ${t2}$, INTENT(IN), TARGET :: arr(..)
+    INTEGER(dl) :: shparr = SHAPE(arr)
+    INTEGER(dl) :: shptake = [ABS(sigma), shparr(2:)]
+    ${t2}$, POINTER :: take(shptake)
+
+    ! Internal variables
+    INTEGER :: d
+    ${t1}$ :: n
+    LOGICAL :: lvalid
+    INTEGER(dl) :: istart(RANK(arr)), iend(RANK(arr))
+
+    SELECT RANK(arr)
+    RANK(0)
+
+      ! Take is defined for objects of dimensionality >= 1
+      CALL error_scalar
+      NULLIFY(take)
+      RETURN
+
+    RANK(1)
+
+      take(:) => take_sv_${k1}$_${k2}$(sigma,arr)
+      RETURN
+
+    RANK(*)
+
+      take(:) => take_sv_${k1}$_${k2}$(sigma,arr)
+      RETURN
+      n = SIZE( arr, 1 )
+
+    RANK DEFAULT
+
+      n = SIZE( arr, 1 )
+      lvalid = check_overtake( sigma, n )
+      IF( .NOT. lvalid ) NULLIFY(take)
+    END SELECT
+
+    IF( lvalid ) THEN
+      IF( sigma > 0 ) THEN
+
+        ! Positive take
+        istart = [( 1, d = 1, RANK(arr) )]
+        iend = [ sigma, SHAPE(arr)(2:) ]
+        take => arr(istart:iend)
+
+      ELSE
+
+        ! Negative take
+        ! Note how +1 is needed here to account for 1-based Fortran indexing
+        istart = [ n+sigma+1, ( 1, d = 2, RANK(arr) )]
+        iend = [ n, SHAPE(arr)(2:) ]
+        take => arr(istart:iend)
+
+      END IF
+    END IF
+  END FUNCTION take_sr_${k1}$_${k2}$
+  #:endfor
+#:endfor
+!===============================================================================
 END MODULE mod_moa_take
