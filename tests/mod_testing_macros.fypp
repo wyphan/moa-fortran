@@ -1,0 +1,54 @@
+#! -*- mode: f90; -*-
+#:mute
+!===============================================================================
+! Testing infrastructure fypp macros
+! Last edited: Nov 10, 2021 (WYP)
+!===============================================================================
+#:endmute
+
+#! Initialize testing infrastructure
+
+#! Number of tests
+#:global ntst
+#:set ntst = 0
+
+#! Dictionaries to hold golden values and test labels
+#:global chkval
+#:set chkval = {}
+#:global tstlbl
+#:set tstlbl = {}
+
+#! Macro to register golden value
+#:def save_gold( lbl, val )
+  $:tstlbl.update([(ntst, lbl)])
+  $:chkval.update([(ntst, val)])
+#:enddef save_gold
+
+#! Macro to check scalar test result exactly against golden value
+#:def check_exact( val )
+  #:set lbl  = tstlbl[ntst]
+  #:set gold = chkval[ntst]
+  BLOCK
+    USE ISO_FORTRAN_ENV, ONLY: o => output_unit, e => error_unit
+    WRITE(o,'(A)') ${lbl}$
+    IF( ${val}$ == ${gold}$ )
+      WRITE(e,*) 'OK: result = ', ${val}$
+    ELSE
+      nerr = nerr + 1
+      WRITE(e,*) 'Error[${_FILE_}$]: result = ', ${val}$, ', should be ${gold}$'
+    END IF
+  END BLOCK
+  #:set ntst = ntst + 1
+#:enddef check_exact
+
+#:def test_summary()
+  BLOCK
+    USE ISO_FORTRAN_ENV, ONLY: o => output_unit
+    WRITE(o,'("Summary for ${_FILE_}$:")')
+    IF( nerr > 0 )
+      WRITE(o,'("  ",I0," out of ${ntst}$ tests failed")') nerr
+    ELSE
+      WRITE(o,'("  All ${ntst}$ tests succeeded")')
+    END IF
+  END BLOCK
+#:enddef test_summary
