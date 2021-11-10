@@ -1,6 +1,6 @@
 #! -*- mode: f90; -*-
-#:include "../common/common.fypp"
-#:include "mod_testing.fypp"
+#:include "../src/common/common.fypp"
+#:include "mod_testing_macros.fypp"
 !===============================================================================
 ! Unit test for "Gamma" offset functions
 ! Last edited: Oct 26, 2021 (WYP)
@@ -11,6 +11,8 @@ PROGRAM testgamma
 
   USE mod_prec
   USE moa
+  USE mod_testing
+
   IMPLICIT NONE
 
   INTEGER, PARAMETER :: maxdim = 18
@@ -41,7 +43,7 @@ PROGRAM testgamma
 
   WRITE(u,'("Gamma( <0, 0>, <2> )")')
   r = moa_gamma( [0,0], [2] )
-  WRITE(u,'("Return value = ", I0)' r
+  WRITE(u,'("Return value = ", I0)') r
   WRITE(u,*)
 
 #:for k1, t1 in INT_KINDS_TYPES
@@ -49,12 +51,12 @@ PROGRAM testgamma
 
   WRITE(u,'("Gamma( <69>, <42> )")')
   r = moa_gamma( [ 69_${k1}$ ], [ 42_${k1}$ ] )
-  WRITE(u,'("Return value = ", I0)' r
+  WRITE(u,'("Return value = ", I0)') r
   WRITE(u,*)
 
   WRITE(u,'("Gamma( <3, 7>, <4, 5> )")')
   r = moa_gamma( [ 3_${k1}$, 7_${k1}$ ], [ 4_${k1}$, 5_${k1}$ ] )
-  WRITE(u,'("Return value = ", I0)' r
+  WRITE(u,'("Return value = ", I0)') r
   WRITE(u,*)
 #:endfor
 
@@ -91,7 +93,7 @@ PROGRAM testgamma
   @:check_exact( r )
 
   @:save_gold( "Gamma_col( <2, 3>, <4, 5> )", 14 )
-  r = moa_gamma( a(0:1), b(0:1), layout=mod_gamma_col )
+  r = moa_gamma( a(0:1), b(0:1), layout=moa_gamma_col )
   @:check_exact( r )
   WRITE(u,*)
 
@@ -104,24 +106,26 @@ PROGRAM testgamma
   @:check_exact( r )
 
   @:save_gold( "Gamma_col( <0, 1, 2>, <2, 3, 4> )", 14 )
-  r = moa_gamma( a(0:2), b(0:2), layout=mod_gamma_col )
+  r = moa_gamma( a(0:2), b(0:2), layout=moa_gamma_col )
   @:check_exact( r )
 
   WRITE(u,'("Test for ",I0,"-D arrays of ${t1}$ type")') maxdim
-  a(i) = [ 1, i = 0, maxdim-1 ]
-  b(i) = [ 2, i = 0, maxdim-1 ]
+  a = [( 1, i = 0, maxdim-1 )]
+  b = [( 2, i = 0, maxdim-1 )]
 
   @:save_gold( "Gamma_row( <1, ..., 1>, <2, ..., 2> )", 2**maxdim - 1 )
   r = moa_gamma( a, b )
   @:check_exact( r )
 
   @:save_gold( "Gamma_col( <1, ..., 1>, <2, ..., 2> )", 2**maxdim - 1 )
-  r = moa_gamma( a, b, layout=mod_gamma_col )
+  r = moa_gamma( a, b, layout=moa_gamma_col )
   @:check_exact( r )
 
 #:endfor
 
-@:mem_linux('Memory usage:')
+@:test_summary()
+
+#! @:mem_linux('Memory usage:')
 
   STOP
 END PROGRAM testgamma
