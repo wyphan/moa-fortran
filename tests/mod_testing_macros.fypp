@@ -31,7 +31,7 @@
   BLOCK
     USE ISO_FORTRAN_ENV, ONLY: o => output_unit, e => error_unit
     WRITE(o,'(A)') ${lbl}$
-    IF( ${val}$ == ${gold}$ )
+    IF( ${val}$ == ${gold}$ ) THEN
       WRITE(e,*) 'OK: result = ', ${val}$
     ELSE
       nerr = nerr + 1
@@ -45,7 +45,7 @@
   BLOCK
     USE ISO_FORTRAN_ENV, ONLY: o => output_unit
     WRITE(o,'("Summary for ${_FILE_}$:")')
-    IF( nerr > 0 )
+    IF( nerr > 0 ) THEN
       WRITE(o,'("  ",I0," out of ${ntst}$ tests failed")') nerr
     ELSE
       WRITE(o,'("  All ${ntst}$ tests succeeded")')
