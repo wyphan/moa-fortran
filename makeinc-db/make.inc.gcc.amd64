@@ -15,6 +15,9 @@ SYS = linux
 # https://wiki.debian.org/SupportedArchitectures
 ARCH = amd64
 
+# Where to place the compiled files
+PREFIX ?= $(shell pwd)/build
+
 ###############################################################################
 # Fortran options
 ###############################################################################

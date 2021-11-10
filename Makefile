@@ -23,10 +23,10 @@ include make.inc
 	$(FC) $(FCOPTS) $(CPPOPTS) $< -o $@
 
 %.f90.o: %.pp.f90
-	$(FC) $(FCOPTS) -J$(*D) -Isrc/common -c $< -o $(@:.f90.o=.o)
+	$(FC) $(FCOPTS) -Jbuild/include -Ibuild/include -c $< -o $(@:.f90.o=.o)
 
 %.f90.o: %.f90
-	$(FC) $(FCOPTS) -J$(*D) -Isrc/common -c $< -o $(@:.f90.o=.o)
+	$(FC) $(FCOPTS) -Jbuild/include -Ibuild/include -c $< -o $(@:.f90.o=.o)
 
 ###############################################################################
 # Phony targets
@@ -85,18 +85,23 @@ $(foreach f90file,$(FPPSRC:.F90=.pp.f90),$(f90file)):
 # Build static library
 ###############################################################################
 
-$(foreach objfile,$(DEPTGT),$(objfile)):
+$(foreach objfile,$(DEPTGT),$(objfile)): prebuild
 
 $(foreach objfile,$(TGT),$(objfile)): $(DEPTGT)
 
 STATICLIB = libmoa.$(SYS)-$(ARCH)-$(COMPILER).a
 
+prebuild:
+	[ -d build/lib ]     || mkdir -p build/lib
+	[ -d build/include ] || mkdir -p build/include
+
 mod_moa: $(TGT)
-	$(FC) $(FCOPTS) -Isrc/common -Isrc -c mod_moa.f90 -o mod_moa.o
+	$(FC) $(FCOPTS) -Jbuild/include -Ibuild/include -c mod_moa.f90 -o mod_moa.o
 
 static: mod_moa
 	$(AR) r $(STATICLIB) $(OBJ)
 	$(AR) s $(STATICLIB)
+	cp $(STATICLIB) $(PREFIX)/lib/
 
 ###############################################################################
 # Build shared library
