@@ -44,9 +44,9 @@ MODF90SRC  := $(shell find . -name mod\*.f90)
 MODFPPSRC  := $(shell find . -name mod\*.F90)
 MODFYPPSRC := $(shell find . -name mod\*.fypp)
 
-F90SRC  := $(shell find . -name test\*.f90 | grep -v common)
-FPPSRC  := $(shell find . -name test\*.F90 | grep -v common)
-FYPPSRC := $(shell find . -name test\*.fypp | grep -v common)
+F90SRC  := $(shell find . -name test\*.f90)
+FPPSRC  := $(shell find . -name test\*.F90)
+FYPPSRC := $(shell find . -name test\*.fypp)
 
 PPSRC = $(MODFPPSRC:.F90=.pp.f90) $(MODFYPPSRC:.fypp=.pp.f90) \
           $(FPPSRC:.F90=.pp.f90) $(FYPPSRC:.fypp=.pp.f90)
@@ -93,13 +93,13 @@ prebuild:
 ###############################################################################
 
 test_gamma: test_gamma.f90.o
-	$(FC) $(FCOPTS) -I$(PREFIX)/include $^ $(STATICLIB) -o test_gamma.exe
+	$(FC) $(FCOPTS) -I$(PREFIX)/include $(^:.f90.o=.o) $(STATICLIB) -o test_gamma.exe
 
 test_drop: test_drop.f90.o
-	$(FC) $(FCOPTS) -I$(PREFIX)/include $^ $(STATICLIB) -o test_drop.exe
+	$(FC) $(FCOPTS) -I$(PREFIX)/include $(^:.f90.o=.o) $(STATICLIB) -o test_drop.exe
 
 test_take: test_take.f90.o
-	$(FC) $(FCOPTS) -I$(PREFIX)/include $^ $(STATICLIB) -o test_take.exe
+	$(FC) $(FCOPTS) -I$(PREFIX)/include $(^:.f90.o=.o) $(STATICLIB) -o test_take.exe
 
 ###############################################################################
 # Clean up
