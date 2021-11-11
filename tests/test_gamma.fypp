@@ -67,7 +67,7 @@ PROGRAM testgamma
   WRITE(u,'("Test for empty shape")')
 
   @:save_gold( "Gamma( <>, <> )", 0 )
-  r = moa_gamma( [], [] )
+  r = moa_gamma( [integer ::], [integer ::] )
   @:check_exact( r )
   WRITE(u,*)
 
