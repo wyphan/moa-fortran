@@ -93,13 +93,13 @@ prebuild:
 ###############################################################################
 
 test_gamma: test_gamma.f90.o
-	$(FC) $(FCOPTS) -I$(PREFIX)/include $(^:.f90.o=.o) $(STATICLIB) -o test_gamma.exe
+	$(FC) $(FCOPTS) -I$(PREFIX)/include $(DEPTGT:.f90.o=.o) $(^:.f90.o=.o) $(STATICLIB) -o test_gamma.exe
 
 test_drop: test_drop.f90.o
-	$(FC) $(FCOPTS) -I$(PREFIX)/include $(^:.f90.o=.o) $(STATICLIB) -o test_drop.exe
+	$(FC) $(FCOPTS) -I$(PREFIX)/include $(DEPTGT:.f90.o=.o) $(^:.f90.o=.o) $(STATICLIB) -o test_drop.exe
 
 test_take: test_take.f90.o
-	$(FC) $(FCOPTS) -I$(PREFIX)/include $(^:.f90.o=.o) $(STATICLIB) -o test_take.exe
+	$(FC) $(FCOPTS) -I$(PREFIX)/include $(DEPTGT:.f90.o=.o) $(^:.f90.o=.o) $(STATICLIB) -o test_take.exe
 
 ###############################################################################
 # Clean up
