@@ -3,7 +3,7 @@
 #:set IR_KINDS_TYPES = INT_KINDS_TYPES + REAL_KINDS_TYPES
 !===============================================================================
 ! The "take" operation
-! Last edited: Sep 14, 2021 (JVDP)
+! Last edited: Dec 3, 2021 (WYP)
 !===============================================================================
 MODULE mod_moa_take
   USE mod_prec
@@ -14,24 +14,24 @@ MODULE mod_moa_take
   PRIVATE
   PUBLIC :: moa_take
 
-  INTERFACE moa_take
+#:global TAKE_MAX_DIM
+#:set TAKE_MAX_DIM = 15
 
-    ! scalar take vector
+  INTERFACE moa_take
 #:for k1, t1 in INT_KINDS_TYPES
   #:for k2, t2 in IR_KINDS_TYPES
-    MODULE PROCEDURE take_sv_${k1}$_${k2}$
-    MODULE PROCEDURE take_sr_${k1}$_${k2}$
-  #:endfor
-#:endfor
 
+    MODULE PROCEDURE take_sv_${k1}$_${k2}$ ! ${k1}$ scalar take ${k2}$ vector
+    MODULE PROCEDURE take_sr_${k1}$_${k2}$ ! ${k1}$ scalar take ${k2}$ array
+
+#:endfor
+#:endfor
   END INTERFACE moa_take
 
   interface check_overtake
-
 #:for k1, t1 in INT_KINDS_TYPES
     module procedure check_overtake_${k1}$
 #:endfor
-
   end interface check_overtake
 
 CONTAINS
@@ -117,11 +117,11 @@ CONTAINS
   #:endfor
 #:endfor
 
+#:for k1, t1 in INT_KINDS_TYPES
+  #:for k2, t2 in IR_KINDS_TYPES
 !===============================================================================
 ! Implementation of scalar take vector for ${k1} scalar and ${k2} assumed-rank
 !===============================================================================
-#:for k1, t1 in INT_KINDS_TYPES
-  #:for k2, t2 in IR_KINDS_TYPES
   FUNCTION take_sr_${k1}$_${k2}$ ( sigma, arr ) RESULT( take )
 
     IMPLICIT NONE
@@ -156,15 +156,23 @@ CONTAINS
 
       take(:) => take_sv_${k1}$_${k2}$(sigma,arr)
       RETURN
-      n = SIZE( arr, 1 )
 
-    RANK DEFAULT
+#:for r in range( 2, TAKE_MAX_DIM + 1 )
+    RANK(${r}$)
 
       n = SIZE( arr, 1 )
       lvalid = check_overtake( sigma, n )
       IF( .NOT. lvalid ) NULLIFY(take)
+
+#:endfor
+    RANK DEFAULT
+
+      WRITE(u,'(A,I0,A)') 'Error[moa_take]: Rank ', RANK(array), &
+                          ' not supported yet'
+
     END SELECT
 
+    ! Main compute loop
     IF( lvalid ) THEN
       IF( sigma > 0 ) THEN
 
@@ -183,7 +191,10 @@ CONTAINS
 
       END IF
     END IF
+
+    RETURN
   END FUNCTION take_sr_${k1}$_${k2}$
+
   #:endfor
 #:endfor
 !===============================================================================
