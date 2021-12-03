@@ -19,7 +19,10 @@ PROGRAM testgamma
 
   INTEGER(KIND=dl) :: r
   INTEGER :: i
-  INTEGER :: a(0:maxdim-1), b(0:maxdim-1)
+
+#:for k1, t1 in INT_KINDS_TYPES
+  ${t1}$, DIMENSION(0:maxdim-1) :: a${k1}$, b${k1}$
+#:endfor
 
 #! Macro to print Gamma function enum and name to stdout
 #:def moa_gamma_print(layout)
@@ -73,7 +76,7 @@ PROGRAM testgamma
 
 #:for k1, t1 in INT_KINDS_TYPES
   !-----------------------------------------------------------------------------
-  ! Test for ${t1} type
+  ! Test for ${t1}$ type
   !-----------------------------------------------------------------------------
 
   ! Test for 1-element vectors
@@ -85,40 +88,40 @@ PROGRAM testgamma
   WRITE(u,*)
 
   WRITE(u,'("Test for matrices of ${t1}$ type")')
-  a(0:1) = [ 2_${k1}$, 3_${k1}$ ]
-  b(0:1) = [ 4_${k1}$, 5_${k1}$ ]
+  a${k1}$(0:1) = [ 2_${k1}$, 3_${k1}$ ]
+  b${k1}$(0:1) = [ 4_${k1}$, 5_${k1}$ ]
 
   @:save_gold( "Gamma_row( <2, 3>, <4, 5> )", 13 )
-  r = moa_gamma( a(0:1), b(0:1) )
+  r = moa_gamma( a${k1}$(0:1), b${k1}$(0:1) )
   @:check_exact( r )
 
   @:save_gold( "Gamma_col( <2, 3>, <4, 5> )", 14 )
-  r = moa_gamma( a(0:1), b(0:1), layout=moa_gamma_col )
+  r = moa_gamma( a${k1}$(0:1), b${k1}$(0:1), layout=moa_gamma_col )
   @:check_exact( r )
   WRITE(u,*)
 
   WRITE(u,'("Test for 3-D arrays of ${t1}$ type")')
-  a(0:2) = [ 0_${k1}$, 1_${k1}$, 2_${k1}$ ]
-  b(0:2) = [ 2_${k1}$, 3_${k1}$, 4_${k1}$ ]
+  a${k1}$(0:2) = [ 0_${k1}$, 1_${k1}$, 2_${k1}$ ]
+  b${k1}$(0:2) = [ 2_${k1}$, 3_${k1}$, 4_${k1}$ ]
 
   @:save_gold( "Gamma_row( <0, 1, 2>, <2, 3, 4> )", 6 )
-  r = moa_gamma( a(0:2), b(0:2) )
+  r = moa_gamma( a${k1}$(0:2), b${k1}$(0:2) )
   @:check_exact( r )
 
   @:save_gold( "Gamma_col( <0, 1, 2>, <2, 3, 4> )", 14 )
-  r = moa_gamma( a(0:2), b(0:2), layout=moa_gamma_col )
+  r = moa_gamma( a${k1}$(0:2), b${k1}$(0:2), layout=moa_gamma_col )
   @:check_exact( r )
 
   WRITE(u,'("Test for ",I0,"-D arrays of ${t1}$ type")') maxdim
-  a = [( 1, i = 0, maxdim-1 )]
-  b = [( 2, i = 0, maxdim-1 )]
+  a${k1}$ = [( 1_${k1}$, i = 0, maxdim-1 )]
+  b${k1}$ = [( 2_${k1}$, i = 0, maxdim-1 )]
 
   @:save_gold( "Gamma_row( <1, ..., 1>, <2, ..., 2> )", 2**maxdim - 1 )
-  r = moa_gamma( a, b )
+  r = moa_gamma( a${k1}$, b${k1}$ )
   @:check_exact( r )
 
   @:save_gold( "Gamma_col( <1, ..., 1>, <2, ..., 2> )", 2**maxdim - 1 )
-  r = moa_gamma( a, b, layout=moa_gamma_col )
+  r = moa_gamma( a${k1}$, b${k1}$, layout=moa_gamma_col )
   @:check_exact( r )
 
 #:endfor
