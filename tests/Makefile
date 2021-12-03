@@ -1,11 +1,11 @@
 ###############################################################################
-# Main Makefile for moa-fortran
-# Last edited: Sep 14, 2021 (WYP)
+# Main Makefile for moa-fortran tests
+# Last edited: Oct 25, 2021 (WYP)
 ###############################################################################
 
 # Please provide a make.inc file.
 # You can start from one of the files in the makeinc-db subdirectory
-include make.inc
+include ../make.inc
 
 ###############################################################################
 # Prefix rules
@@ -17,16 +17,16 @@ include make.inc
 %.o: %.mod
 
 %.pp.f90: %.fypp
-	$(PY) deps/fypp/bin/fypp $< $@
+	$(PY) ../deps/fypp/bin/fypp $< $@
 
 %.pp.f90: %.F90
 	$(FC) $(FCOPTS) $(CPPOPTS) $< -o $@
 
 %.f90.o: %.pp.f90
-	$(FC) $(FCOPTS) -Jbuild/include -Ibuild/include -c $< -o $(@:.f90.o=.o)
+	$(FC) $(FCOPTS) -J$(*D) -I../build/include -c $< -o $(@:.f90.o=.o)
 
 %.f90.o: %.f90
-	$(FC) $(FCOPTS) -Jbuild/include -Ibuild/include -c $< -o $(@:.f90.o=.o)
+	$(FC) $(FCOPTS) -J$(*D) -I../build/include -c $< -o $(@:.f90.o=.o)
 
 ###############################################################################
 # Phony targets
@@ -34,19 +34,19 @@ include make.inc
 
 .PHONY: all
 
-all: static shared
+all: test_gamma test_drop test_take
 
 ###############################################################################
 # List sources and targets
 ###############################################################################
 
-MODF90SRC  := $(shell find src/common -name \*.f90)
-MODFPPSRC  := $(shell find src/common -name \*.F90)
-MODFYPPSRC := $(shell find src/common -name \*.fypp)
+MODF90SRC  := $(shell find . -name mod\*.f90)
+MODFPPSRC  := $(shell find . -name mod\*.F90)
+MODFYPPSRC := $(shell find . -name mod\*.fypp)
 
-F90SRC  := $(shell find src -name \*.f90 | grep -v common)
-FPPSRC  := $(shell find src -name \*.F90 | grep -v common)
-FYPPSRC := $(shell find src -name \*.fypp | grep -v common)
+F90SRC  := $(shell find . -name test\*.f90)
+FPPSRC  := $(shell find . -name test\*.F90)
+FYPPSRC := $(shell find . -name test\*.fypp)
 
 PPSRC = $(MODFPPSRC:.F90=.pp.f90) $(MODFYPPSRC:.fypp=.pp.f90) \
           $(FPPSRC:.F90=.pp.f90) $(FYPPSRC:.fypp=.pp.f90)
@@ -56,14 +56,8 @@ DEPTGT = $(MODF90SRC:.f90=.f90.o) \
 
 TGT = $(F90SRC:.f90=.f90.o) $(FPPSRC:.F90=.f90.o) $(FYPPSRC:.fypp=.f90.o)
 
-OBJ = mod_moa.o \
-        $(MODF90SRC:.f90=.o) $(MODFPPSRC:.F90=.o) $(MODFYPPSRC:.fypp=.o) \
+OBJ = $(MODF90SRC:.f90=.o) $(MODFPPSRC:.F90=.o) $(MODFYPPSRC:.fypp=.o) \
         $(F90SRC:.f90=.o) $(FPPSRC:.F90=.o) $(FYPPSRC:.fypp=.o)
-F90MOD = moa.mod \
-           $(MODF90SRC:%.f90=mod_%.mod) \
-           $(MODFPPSRC:%.F90=mod_%.mod) $(MODFYPPSRC:%.fypp=mod_%.mod) \
-           $(F90SRC:%.f90=mod_%.mod) \
-           $(FPPSRC:%.F90=mod_%.mod) $(FYPPSRC:%.fypp=mod_%.mod)
 
 ###############################################################################
 # Preprocess with fypp
@@ -82,56 +76,39 @@ $(foreach f90file,$(MODFPPSRC:.F90=.pp.f90),$(f90file)):
 $(foreach f90file,$(FPPSRC:.F90=.pp.f90),$(f90file)):
 
 ###############################################################################
-# Build static library
+# Generic targets
 ###############################################################################
 
 $(foreach objfile,$(DEPTGT),$(objfile)): prebuild
 
 $(foreach objfile,$(TGT),$(objfile)): $(DEPTGT)
 
-STATICLIB = libmoa.$(SYS)-$(ARCH)-$(COMPILER).a
+STATICLIB = ../libmoa.$(SYS)-$(ARCH)-$(COMPILER).a
 
 prebuild:
-	[ -d build/lib ]     || mkdir -p build/lib
-	[ -d build/include ] || mkdir -p build/include
-
-mod_moa: $(TGT)
-	$(FC) $(FCOPTS) -Jbuild/include -Ibuild/include -c mod_moa.f90 -o mod_moa.o
-
-static: mod_moa
-	$(AR) r $(STATICLIB) $(OBJ)
-	$(AR) s $(STATICLIB)
-	cp $(STATICLIB) $(PREFIX)/lib/
+	-[ -e $(STATICLIB) ] || make -C .. static
 
 ###############################################################################
-# Build shared library
+# Specific targets
 ###############################################################################
 
-# TODO
-shared: $(TGT)
+test_gamma: test_gamma.f90.o
+	$(FC) $(FCOPTS) -I$(PREFIX)/include $(DEPTGT:.f90.o=.o) $(^:.f90.o=.o) $(STATICLIB) -o test_gamma.exe
 
-###############################################################################
-# Test
-###############################################################################
+test_drop: test_drop.f90.o
+	$(FC) $(FCOPTS) -I$(PREFIX)/include $(DEPTGT:.f90.o=.o) $(^:.f90.o=.o) $(STATICLIB) -o test_drop.exe
 
-test: mod_moa
-	make -C tests
-
-###############################################################################
-# Install
-###############################################################################
-
-# TODO
-install:
+test_take: test_take.f90.o
+	$(FC) $(FCOPTS) -I$(PREFIX)/include $(DEPTGT:.f90.o=.o) $(^:.f90.o=.o) $(STATICLIB) -o test_take.exe
 
 ###############################################################################
 # Clean up
 ###############################################################################
 
 clean:
-	-rm -f $(STATICLIB)
 	-rm -f $(OBJ)
 	-rm -f `find . -name \*.mod`
+	-rm -f `find . -name \*.exe`
 ifneq ($(KEEPF90PP), 1)
 	-rm -f $(PPSRC)
 endif

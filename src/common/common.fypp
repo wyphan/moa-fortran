@@ -1,24 +1,26 @@
 #! -*- mode: f90; -*-
 #:mute
 
+#!==============================================================================
+#! Types for templating
+#!==============================================================================
+
 #! Real kinds to be considered during templating
 #:set REAL_KINDS = ["ds", "dd", "dq"]
-
-#! Real types to be considered during templating
 #:set REAL_TYPES = ["real({})".format(k) for k in REAL_KINDS]
-
-#! Collected (kind, type) tuples for real types
-#:set REAL_KINDS_TYPES = list(zip(REAL_KINDS, REAL_TYPES))
 
 #! Integer kinds to be considered during templating
 #:set INT_KINDS = ["di", "dl"]
-
-#! Integer types to be considered during templating
 #:set INT_TYPES = ["integer({})".format(k) for k in INT_KINDS]
 
-#! Collected (kind, type) tuples for integer types
-#:set INT_KINDS_TYPES = list(zip(INT_KINDS, INT_TYPES))
+#! Collected (kind, type) tuples
+#:set REAL_KINDS_TYPES = list(zip(REAL_KINDS, REAL_TYPES))
+#:set INT_KINDS_TYPES  = list(zip(INT_KINDS,  INT_TYPES))
+#:set IR_KINDS_TYPES   = INT_KINDS_TYPES + REAL_KINDS_TYPES
 
+#!==============================================================================
+#! Timing macros
+#!==============================================================================
 
 #! Generates a loop around the procedure for which the time should be
 #! measured
@@ -31,7 +33,6 @@
 #! @:TOC()
 #! ...
 #! ```
-
 
 #:def TIC(n=10)
   #:global BENCHMARK_NREPS
@@ -67,5 +68,7 @@
   end block
   #:del BENCHMARK_NREPS
 #:enddef
+
+#!==============================================================================
 
 #:endmute
