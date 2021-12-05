@@ -126,13 +126,13 @@ CONTAINS
 !===============================================================================
 ! Implementation of scalar take vector for ${k1} scalar and ${k2} assumed-rank array
 !===============================================================================
-  FUNCTION take_sr_${k1}$_${k2}$ ( sigma, arr ) RESULT( take )
+  SUBROUTINE take_sr_${k1}$_${k2}$ ( take, sigma, arr )
     IMPLICIT NONE
 
     ! Arguments
     ${t1}$, INTENT(IN) :: sigma
     ${t2}$, INTENT(IN), TARGET :: arr(..)
-    ${t2}$, POINTER :: take(..)
+    ${t2}$, INTENT(OUT), POINTER :: take(..)
 
     SELECT RANK(arr)
 
@@ -167,7 +167,7 @@ CONTAINS
     END SELECT
 
     RETURN
-  END FUNCTION take_sr_${k1}$_${k2}$
+  END SUBROUTINE take_sr_${k1}$_${k2}$
   #:endfor
 #:endfor
 
@@ -222,7 +222,7 @@ CONTAINS
 
       END IF ! +/- take
 
-      take => arr(istart:iend)
+      take => arr(${',&\n'.join('istart({}):iend({})'.format(i+1,i+1) for i in range(r))}$)
 
     END IF ! lvalid
 
