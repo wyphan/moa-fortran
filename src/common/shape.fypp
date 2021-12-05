@@ -1,0 +1,55 @@
+#! -*- mode: f90; -*-
+#:include "common.fypp"
+!===============================================================================
+! Utility module for extracting array shapes
+! Last edited: Dec 5, 2021 (WYP)
+!===============================================================================
+module mod_shape
+  use mod_prec
+  implicit none
+
+  private
+  public :: array_shape
+
+#:global SHAPE_MAX_DIM
+#:set SHAPE_MAX_DIM = 15
+
+  interface array_shape
+
+#:for k1, t1 in INT_KINDS_TYPES
+  #:for k2, t2 in IR_KINDS_TYPES
+
+    pure module function array_shape_${k1}$_${k2}$ ( arr ) result(shparr)
+      implicit none
+      ${t2}$, intent(in) :: arr(..)
+      ${t1}$, allocatable :: shparr(:)
+    end function array_shape_${k1}$_${k2}$
+
+  #:endfor
+#:endfor
+  end interface array_shape
+
+end module
+
+submodule(mod_shape) smod_array_shape
+  implicit none
+contains
+
+#:for k1, t1 in INT_KINDS_TYPES
+  #:for k2, t2 in IR_KINDS_TYPES
+  module procedure array_shape_${k1}$_${k2}$
+
+    select rank(arr)
+  #:for r in range( SHAPE_MAX_DIM + 1 )
+      rank(${r}$)
+        shparr = shape(arr)
+  #:endfor
+      rank default
+        error stop "unsupported rank"
+    end select
+
+   end procedure array_shape_${k1}$_${k2}$
+
+  #:endfor
+#:endfor
+end submodule smod_array_shape

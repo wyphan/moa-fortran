@@ -1,12 +1,12 @@
 #! -*- mode: f90; -*-
 #:include "common/common.fypp"
-#:set IR_KINDS_TYPES = INT_KINDS_TYPES + REAL_KINDS_TYPES
 !===============================================================================
 ! The "take" operation
-! Last edited: Sep 14, 2021 (JVDP)
+! Last edited: Dec 3, 2021 (WYP)
 !===============================================================================
 MODULE mod_moa_take
   USE mod_prec
+  USE mod_shape, ONLY: array_shape
   USE ISO_FORTRAN_ENV, ONLY: u => error_unit
 
   IMPLICIT NONE
@@ -14,32 +14,37 @@ MODULE mod_moa_take
   PRIVATE
   PUBLIC :: moa_take
 
+#:global TAKE_MAX_DIM
+#:set TAKE_MAX_DIM = 15
+
   INTERFACE moa_take
 
-    ! scalar take vector
 #:for k1, t1 in INT_KINDS_TYPES
   #:for k2, t2 in IR_KINDS_TYPES
-    MODULE PROCEDURE take_sv_${k1}$_${k2}$
+    MODULE PROCEDURE take_sv_${k1}$_${k2}$ ! ${k1}$ scalar take ${k2}$ vector
+    MODULE PROCEDURE take_sr_${k1}$_${k2}$ ! ${k1}$ scalar take ${k2}$ assumed-rank array
+    #:for r in range( 2, TAKE_MAX_DIM + 1 )
+    MODULE PROCEDURE take_s${r}$_${k1}$_${k2}$ ! ${k1}$ scalar take ${k2}$ ${r}$-D array
+    #:endfor
+
   #:endfor
 #:endfor
-
   END INTERFACE moa_take
 
   interface check_overtake
-
 #:for k1, t1 in INT_KINDS_TYPES
     module procedure check_overtake_${k1}$
 #:endfor
-
-end interface
+  end interface check_overtake
 
 CONTAINS
 
-!===================================================
+!===============================================================================
 ! Helper function to print error message on overtake
-!===================================================
+!===============================================================================
 #:for k1, t1 in INT_KINDS_TYPES
   LOGICAL FUNCTION check_overtake_${k1}$ ( sigma, n )
+
     ! Input arguments
     ${t1}$, INTENT(IN) :: sigma, n
 
@@ -62,10 +67,18 @@ CONTAINS
 #:endfor
 
 !===============================================================================
-! Implementation of scalar take vector for ${k1} scalar and ${k2} vector
+! Helper function to print error message on scalar take scalar
 !===============================================================================
+  SUBROUTINE error_scalar
+    IMPLICIT NONE
+    WRITE(u,'(A)') 'Error[moa_take]: Cannot perform scalar take scalar'
+  END SUBROUTINE error_scalar
+
 #:for k1, t1 in INT_KINDS_TYPES
   #:for k2, t2 in IR_KINDS_TYPES
+!===============================================================================
+! Implementation of scalar take vector for ${k1} scalar and ${k2} vector
+!===============================================================================
   FUNCTION take_sv_${k1}$_${k2}$ ( sigma, vec ) RESULT( take )
 
     IMPLICIT NONE
@@ -94,19 +107,130 @@ CONTAINS
         ! Note how +1 is needed here to account for 1-based Fortran indexing
         take => vec( (n+sigma+1): )
 
-      END IF
+      END IF ! +/- take
 
     ELSE
 
       ! Overtake
       NULLIFY(take)
 
-    END IF
+    END IF ! lvalid
 
+    RETURN
   END FUNCTION take_sv_${k1}$_${k2}$
+
+  #:endfor
+#:endfor
+#:for k1, t1 in INT_KINDS_TYPES
+  #:for k2, t2 in IR_KINDS_TYPES
+!===============================================================================
+! Implementation of scalar take vector for ${k1} scalar and ${k2} assumed-rank array
+!===============================================================================
+  SUBROUTINE take_sr_${k1}$_${k2}$ ( take, sigma, arr )
+    IMPLICIT NONE
+
+    ! Arguments
+    ${t1}$, INTENT(IN) :: sigma
+    ${t2}$, INTENT(IN), TARGET :: arr(..)
+    ${t2}$, INTENT(OUT), POINTER :: take(..)
+
+    SELECT RANK(arr)
+
+    RANK(0)
+
+      CALL error_scalar
+      NULLIFY(take)
+      RETURN
+
+    RANK(1)
+
+      take => take_sv_${k1}$_${k2}$( sigma, arr )
+      RETURN
+
+    RANK(*)
+
+      take => take_sv_${k1}$_${k2}$( sigma, arr )
+      RETURN
+
+    #:for r in range( 2, TAKE_MAX_DIM + 1 )
+    RANK(${r}$)
+
+      take => take_s${r}$_${k1}$_${k2}$( sigma, arr )
+      RETURN
+
+    #:endfor
+    RANK DEFAULT
+
+      WRITE(u,'(A,I0,A)') 'Error[moa_take]: Rank-', RANK(arr), &
+                          ' array not supported'
+
+    END SELECT
+
+    RETURN
+  END SUBROUTINE take_sr_${k1}$_${k2}$
   #:endfor
 #:endfor
 
+#:for k1, t1 in INT_KINDS_TYPES
+  #:for k2, t2 in IR_KINDS_TYPES
+    #:for r in range( 2, TAKE_MAX_DIM + 1 )
 !===============================================================================
+! Implementation of scalar take vector for ${k1} scalar and ${k2} ${r}-D array
+!===============================================================================
+  FUNCTION take_s${r}$_${k1}$_${k2}$ ( sigma, arr ) RESULT( take )
+    IMPLICIT NONE
 
+    ! Arguments
+    ${t1}$, INTENT(IN) :: sigma
+    ${t2}$, INTENT(IN), TARGET :: arr(${','.join(':' for i in range(r))}$)
+    ${t2}$, POINTER :: take(${','.join(':' for i in range(r))}$)
+
+    ! Internal variables
+    INTEGER(dl) :: istart(${r}$), iend(${r}$)
+    INTEGER(dl), ALLOCATABLE :: arrshp(:), resshp(:)
+    INTEGER(dl) :: d
+    ${t1}$ :: n
+    LOGICAL :: lvalid
+
+
+    n = SIZE( arr, 1 )
+    lvalid = check_overtake( sigma, n )
+    IF( .NOT. lvalid ) NULLIFY(take)
+
+    ! Main compute loop
+    IF( lvalid ) THEN
+
+      ! Set the shape of the result according to MoA rules
+      arrshp = array_shape( arr )
+      resshp = [ INT(ABS(sigma),dl), arrshp(2:) ]
+
+      ! Reallocate the pointer to the correct shape
+      ALLOCATE( take(resshp) )
+
+      IF( sigma > 0 ) THEN
+
+        ! Positive take
+        istart = [( 1_dl, d = 1_dl, RANK(arr) )]
+        iend   = [ INT(sigma,dl), arrshp(2:) ]
+
+      ELSE
+
+        ! Negative take
+        ! Note how +1 is needed here to account for 1-based Fortran indexing
+        istart = [ INT(n+sigma+1,dl), ( 1_dl , d = 2_dl, RANK(arr) )]
+        iend   = [ INT(n,dl), arrshp(2:) ]
+
+      END IF ! +/- take
+
+      take => arr(${',&\n'.join('istart({}):iend({})'.format(i+1,i+1) for i in range(r))}$)
+
+    END IF ! lvalid
+
+    RETURN
+  END FUNCTION take_s${r}$_${k1}$_${k2}$
+
+    #:endfor
+  #:endfor
+#:endfor
+!===============================================================================
 END MODULE mod_moa_take
