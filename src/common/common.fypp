@@ -19,6 +19,8 @@
 #! Collected (kind, type) tuples for integer types
 #:set INT_KINDS_TYPES = list(zip(INT_KINDS, INT_TYPES))
 
+#! Collected (kind, type) tuples for integer and real types
+#:set IR_KINDS_TYPES = INT_KINDS_TYPES + REAL_KINDS_TYPES
 
 #! Generates a loop around the procedure for which the time should be
 #! measured

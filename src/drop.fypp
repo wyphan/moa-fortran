@@ -1,6 +1,5 @@
 #! -*- mode: f90; -*-
 #:include "common/common.fypp"
-#:set IR_KINDS_TYPES = INT_KINDS_TYPES + REAL_KINDS_TYPES
 !===============================================================================
 ! The "drop" operation
 ! Last edited: Sep 17, 2021 (JVDP)
