@@ -20,7 +20,7 @@ contains
 
 rank default
 this%parray => array
-thsi%shape = shape(array)
+this%shape = shape(array)
 
 
 
