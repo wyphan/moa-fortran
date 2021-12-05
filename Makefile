@@ -127,6 +127,7 @@ clean:
 	-rm -f $(STATICLIB)
 	-rm -f $(OBJ)
 	-rm -f `find . -name \*.mod`
+	-rm -f `find . -name \*.smod`
 ifneq ($(KEEPF90PP), 1)
 	-rm -f $(PPSRC)
 endif
