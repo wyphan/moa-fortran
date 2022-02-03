@@ -1,11 +1,11 @@
 # -*- mode: makefile-gmake; -*-
 ###############################################################################
-# make.inc file for GCC on 64-bit x86 Linux
-# Last edited: Sep 12, 2021 (WYP)
+# make.inc file for Intel Fortran Classic (ifort) on 64-bit x86 Linux
+# Last edited: Oct 26, 2021 (WYP)
 ###############################################################################
 
 # Name of the compiler suite (used for library name)
-COMPILER = gcc
+COMPILER = intel
 
 # System (Linux, Windows, or Mac)
 SYS = linux
@@ -20,16 +20,17 @@ ARCH = amd64
 ###############################################################################
 
 # Path/name of the Fortran compiler
-FC = gfortran
+FC = ifort
 
 # General options for the Fortran compiler
-FCOPTS = -g -O2 -fPIC -march=native -fopt-info
+FCOPTS = -g -debug -O2 -fPIC -xHost -qopt-report
 
 # Preprocessor options
-CPPOPTS = -cpp -E
+CPPOPTS = -fpp -E
 
 # Module path flag
-MODFLAG = -J
+MODFLAG = -module
+MODFLAG += 
 
 ###############################################################################
 # Python options
