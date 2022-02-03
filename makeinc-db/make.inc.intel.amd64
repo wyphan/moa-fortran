@@ -30,7 +30,7 @@ CPPOPTS = -fpp -E
 
 # Module path flag
 MODFLAG = -module
-MODFLAG += ' '
+MODFLAG += 
 
 ###############################################################################
 # Python options
