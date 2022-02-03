@@ -21,8 +21,13 @@ PROGRAM test_moa_cat
     b = [-2, -3, -5, -7, -11, -13, -17, -19, -23, -29]
     c = [31, 37, 41, 43,  47,  53,  59,  61,  67,  71]
 
+#ifdef __INTEL_COMPILER
+    x = a .cat. b
+    y = x .cat. c
+#else
     x = a // b
     y = x // c
+#endif /* __INTEL_COMPILER */
 
     WRITE(*,*) 'Catenation with one-dimensional arrays'
 
@@ -44,7 +49,12 @@ PROGRAM test_moa_cat
     WRITE(*,*) 'Catenation with scalars:'
     i = 12
     j = 34
+#ifdef __INTEL_COMPILER
+    z = i .cat. j
+#else
     z = i // j
+#endif /* __INTEL_COMPILER */
+
     WRITE(*,*) '    Shape: ', shape(z)
     WRITE(*,*) '    Rank:  ', rank(z)
     WRITE(*,*) '    First scalar:  ', z%elem(1)
@@ -61,7 +71,11 @@ PROGRAM test_moa_cat
     aa = reshape(a,[2,5])
     bb = reshape(b,[2,5])
 
+#ifdef __INTEL_COMPILER
+    z = aa .cat. bb
+#else
     z = aa // bb
+#endif /* __INTEL_COMPILER */
 
     WRITE(*,*) '    Rank z:  ', rank(z)
     WRITE(*,*) '    Shape z: ', shape(z)

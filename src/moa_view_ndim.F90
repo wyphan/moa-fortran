@@ -12,17 +12,13 @@ MODULE moa_view_types
     IMPLICIT NONE
 
     PRIVATE
-    PUBLIC :: moa_view_type, operator(//), size, shape, rank
+    PUBLIC :: moa_view_type, size, shape, rank
 
-    !
-    ! NOTE: Intel Fortran 2021.04 does not support overloading //
-    ! Then a user-defined operator can be used instead:
-    !
-    ! INTERFACE operator(.cat.)
-    !     MODULE PROCEDURE catenate_array_array, catenate_array_view, catenate_view_array, catenate_view_view
-    ! END INTERFACE
-
-
+#ifdef __INTEL_COMPILER
+    PUBLIC :: OPERATOR(.cat.)
+#else
+    PUBLIC :: OPERATOR(//)
+#endif /* __INTEL_COMPILER */
 
     !
     ! Type for defining "views" on arrays - to allow for a#b#c: POINTERs to other views
@@ -38,7 +34,15 @@ MODULE moa_view_types
          PROCEDURE         :: elem_ndim   => get_elem_ndim
     END TYPE moa_view_type
 
+#ifdef __INTEL_COMPILER
+    !
+    ! NOTE: Intel Fortran 2021.04 does not support overloading //
+    ! Then a user-defined operator can be used instead:
+    !
+    INTERFACE operator(.cat.)
+#else
     INTERFACE operator(//)
+#endif /* __INTEL_COMPILER */
         MODULE PROCEDURE catenate_array_array, catenate_array_view, catenate_view_array, catenate_view_view
     END INTERFACE
 
