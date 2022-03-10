@@ -1,0 +1,21 @@
+# Example of using the moa_measure program
+#
+# First define the view, then sample the result
+#
+report-file array1.out
+
+use-plain-array            # just to be sure
+allocate-array 100000      # same size as the total of the view
+number-repetitions 100000  # repeat any procedure a hundred thousand times
+
+use-plain-array            # just to be sure
+
+sequential-get 1 10000     # simple sequential access
+random-get 10000           # simple random access
+
+sequential-get 10 10000    # simple sequential access with a step of 10
+sequential-get 100 10000    # simple sequential access with a step of 10
+sequential-get 179  10000    # simple sequential access with a step of 10
+sequential-get 357  10000    # simple sequential access with a step of 10
+sequential-get 1000 10000    # simple sequential access with a step of 10
+

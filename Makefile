@@ -20,13 +20,13 @@ include make.inc
 	$(PY) deps/fypp/bin/fypp $< $@
 
 %.pp.f90: %.F90
-	$(FC) $(FCOPTS) $(CPPOPTS) $< -o $@
+	$(FC) $(FCOPTS) $(CPPOPTS) $< > $@
 
 %.f90.o: %.pp.f90
-	$(FC) $(FCOPTS) -J$(*D) -Isrc/common -c $< -o $(@:.f90.o=.o)
+	$(FC) $(FCOPTS) $(MODFLAG)$(*D) -Isrc/common -c $< -o $(@:.f90.o=.o)
 
 %.f90.o: %.f90
-	$(FC) $(FCOPTS) -J$(*D) -Isrc/common -c $< -o $(@:.f90.o=.o)
+	$(FC) $(FCOPTS) $(MODFLAG)$(*D) -Isrc/common -c $< -o $(@:.f90.o=.o)
 
 ###############################################################################
 # Phony targets
