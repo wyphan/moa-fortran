@@ -6,7 +6,7 @@ report-file array1.out
 
 use-plain-array            # just to be sure
 allocate-array 100000      # same size as the total of the view
-number-repetitions 100000  # repeat any procedure a thousand times
+number-repetitions 100000  # repeat any procedure a hundred thousand times
 
 use-plain-array            # just to be sure
 

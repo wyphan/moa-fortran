@@ -6,7 +6,7 @@ report-file view4b.out
 
 use-view                   # just to be sure
 allocate-view 100 1000000  # total size of the view
-number-repetitions 100000  # repeat any procedure a thousand times
+number-repetitions 100000  # repeat any procedure a hundred thousand times
 
 sequential-get 1 10000     # simple sequential access
 random-get 10000           # simple random access
