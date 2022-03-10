@@ -64,8 +64,8 @@ endif
 all: main
 
 OBJ = cmdparse.o \
-      view_general.o \
-      moa_view_ndim_flat.o \
+      view_general_v6.o \
+      moa_view_ndim_flat_v5.o \
       moa_measure.o
 F90MOD = moa_basic_view_types.mod \
          moa_view_types.mod \
@@ -73,9 +73,9 @@ F90MOD = moa_basic_view_types.mod \
 
 prereq: cmdparse.f90.o
 
-view_general: prereq view_general.f90.o
+view_general: prereq view_general_v6.f90.o
 
-moa_view_ndim_flat: view_general moa_view_ndim_flat.f90.o
+moa_view_ndim_flat: view_general moa_view_ndim_flat_v5.f90.o
 
 # Build main executable
 main: moa_view_ndim_flat moa_measure.f90.o
